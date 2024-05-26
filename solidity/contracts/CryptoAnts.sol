@@ -8,27 +8,27 @@ import {IEgg} from './interfaces/IEgg.sol';
 import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 
 contract CryptoAnts is ICryptoAnts, ERC721 {
-  bool public locked = false;
   IEgg public immutable eggs;
-  uint256 public eggPrice = 0.01 ether;
-  uint256[] public allAntsIds;
-  bool public override notLocked = false;
-  uint256 public antsCreated = 0;
+  uint256 public s_eggPrice = 0.01 ether;
+  uint256 public s_antsCreated = 0;
 
   constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
     eggs = IEgg(_eggs);
   }
 
-  function buyEggs(uint256 _amount) external payable override lock {
-    uint256 _eggPrice = eggPrice;
-    uint256 eggsCallerCanBuy = (msg.value / _eggPrice);
+  function buyEggs(uint256 _amount) external payable {
+    if (_amount == 0) revert ZeroAmount();
+
+    if ((_amount * s_eggPrice) != msg.value) revert WrongEtherSent();
+
     eggs.mint(msg.sender, _amount);
-    emit EggsBought(msg.sender, eggsCallerCanBuy);
+
+    emit EggsBought(msg.sender, _amount);
   }
 
   function createAnt() external {
     if (eggs.balanceOf(msg.sender) < 1) revert NoEggs();
-    uint256 _antId = ++antsCreated;
+    uint256 _antId = ++s_antsCreated;
 
     if (_ownerOf(_antId) != address(0)) revert AlreadyExists();
 
@@ -53,13 +53,6 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
   }
 
   function getAntsCreated() public view returns (uint256) {
-    return antsCreated;
-  }
-
-  modifier lock() {
-    require(locked == false, 'Sorry, you are not allowed to re-enter here :)');
-    locked = true;
-    _;
-    locked = notLocked;
+    return s_antsCreated;
   }
 }
