@@ -8,6 +8,7 @@ import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 contract CryptoAnts is ICryptoAnts, ERC721 {
   IEgg public immutable eggs;
   uint256 private s_eggPrice = 0.01 ether;
+  uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
 
   constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
@@ -42,8 +43,7 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
 
     _burn(_antId);
 
-    // q Should ant price be fixed or determined by governance but still less than egg price?
-    (bool success,) = msg.sender.call{value: 0.004 ether}('');
+    (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
 
     emit AntSold(msg.sender, _antId);
@@ -51,6 +51,10 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
 
   function getEggPrice() public view returns (uint256) {
     return s_eggPrice;
+  }
+
+  function getAntPrice() public view returns (uint256) {
+    return s_antPrice;
   }
 
   function getAntsCreated() public view returns (uint256) {
