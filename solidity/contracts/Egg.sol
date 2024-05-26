@@ -22,6 +22,10 @@ contract Egg is ERC20, IEgg {
     _mint(_to, _amount);
   }
 
+  function burn(address _from, uint256 _amount) external override onlyAntsContract {
+    _burn(_from, _amount);
+  }
+
   function decimals() public view virtual override returns (uint8) {
     return 0;
   }

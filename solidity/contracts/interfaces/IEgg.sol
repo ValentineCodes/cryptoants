@@ -4,5 +4,6 @@ pragma solidity 0.8.19;
 import '@openzeppelin/token/ERC20/IERC20.sol';
 
 interface IEgg is IERC20 {
-  function mint(address, uint256) external;
+  function mint(address _to, uint256 _amount) external;
+  function burn(address _from, uint256 _amount) external;
 }
