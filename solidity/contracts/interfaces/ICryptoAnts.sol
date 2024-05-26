@@ -5,6 +5,7 @@ import '@openzeppelin/token/ERC721/IERC721.sol';
 
 interface ICryptoAnts is IERC721 {
   event EggsBought(address, uint256);
+  event AntSold(address seller, uint256 antId);
 
   function buyEggs(uint256) external payable;
 
@@ -22,4 +23,8 @@ interface ICryptoAnts is IERC721 {
   error WrongEtherSent();
 
   error ZeroAmount();
+
+  error NotAntOwner();
+
+  error TransferFailed();
 }

@@ -2,8 +2,6 @@
 pragma solidity 0.8.19;
 
 import '@openzeppelin/token/ERC721/ERC721.sol';
-import 'forge-std/console.sol';
-
 import {IEgg} from './interfaces/IEgg.sol';
 import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 
@@ -40,12 +38,15 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
   }
 
   function sellAnt(uint256 _antId) external {
-    require(_ownerOf(_antId) == msg.sender, 'Unauthorized');
-
-    (bool success,) = msg.sender.call{value: 0.004 ether}('');
-    require(success, 'Whoops, this call failed!');
+    if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
     _burn(_antId);
+
+    // q Should ant price be fixed or determined by governance but still less than egg price?
+    (bool success,) = msg.sender.call{value: 0.004 ether}('');
+    if (!success) revert TransferFailed();
+
+    emit AntSold(msg.sender, _antId);
   }
 
   function getContractBalance() public view returns (uint256) {
