@@ -7,8 +7,8 @@ import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 
 contract CryptoAnts is ICryptoAnts, ERC721 {
   IEgg public immutable eggs;
-  uint256 public s_eggPrice = 0.01 ether;
-  uint256 public s_antsCreated = 0;
+  uint256 private s_eggPrice = 0.01 ether;
+  uint256 private s_antsCreated = 0;
 
   constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
     eggs = IEgg(_eggs);
@@ -49,8 +49,8 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
     emit AntSold(msg.sender, _antId);
   }
 
-  function getContractBalance() public view returns (uint256) {
-    return address(this).balance;
+  function getEggPrice() public view returns (uint256) {
+    return s_eggPrice;
   }
 
   function getAntsCreated() public view returns (uint256) {
