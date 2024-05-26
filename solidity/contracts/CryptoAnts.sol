@@ -34,7 +34,7 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
 
     _mint(msg.sender, _antId);
 
-    emit AntCreated();
+    emit AntCreated(msg.sender, _antId);
   }
 
   function sellAnt(uint256 _antId) external {
