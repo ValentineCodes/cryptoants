@@ -1,35 +1,14 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.19;
+
 import '@openzeppelin/token/ERC721/ERC721.sol';
-import '@openzeppelin/token/ERC721/IERC721.sol';
 import '@openzeppelin/token/ERC20/IERC20.sol';
 import 'forge-std/console.sol';
 
-interface IEgg is IERC20 {
-  function mint(address, uint256) external;
-}
+import {IEgg} from './interfaces/IEgg.sol';
+import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 
-interface ICryptoAnts is IERC721 {
-  event EggsBought(address, uint256);
-
-  function notLocked() external view returns (bool);
-
-  function buyEggs(uint256) external payable;
-
-  error NoEggs();
-
-  event AntSold();
-
-  error NoZeroAddress();
-
-  event AntCreated();
-
-  error AlreadyExists();
-  error WrongEtherSent();
-}
-
-//SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.4 <0.9.0;
-
-contract CryptoAnts is ERC721, ICryptoAnts {
+contract CryptoAnts is ICryptoAnts, ERC721 {
   bool public locked = false;
   mapping(uint256 => address) public antToOwner;
   IEgg public immutable eggs;

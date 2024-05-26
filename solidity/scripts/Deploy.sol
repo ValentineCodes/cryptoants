@@ -13,9 +13,8 @@ contract Deploy is Script {
   function run() external {
     deployer = vm.rememberKey(vm.envUint('DEPLOYER_PRIVATE_KEY'));
     vm.startBroadcast(deployer);
-    IEgg _eggs = IEgg(computeCreateAddress(deployer, 1));
-    _cryptoAnts = new CryptoAnts(address(_eggs));
     _eggs = new Egg(address(_cryptoAnts));
+    _cryptoAnts = new CryptoAnts(address(_eggs));
     vm.stopBroadcast();
   }
 }

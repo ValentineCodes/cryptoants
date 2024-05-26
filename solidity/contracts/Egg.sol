@@ -1,23 +1,24 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.19;
+
 import '@openzeppelin/token/ERC20/ERC20.sol';
-import '@openzeppelin/token/ERC20/IERC20.sol';
+import {IEgg} from './interfaces/IEgg.sol';
 
-interface IEgg is IERC20 {
-  function mint(address, uint256) external;
-}
-
-//SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.4 <0.9.0;
+error Egg__OnlyAntsContractCanCallThis();
 
 contract Egg is ERC20, IEgg {
-  address private _ants;
+  address private s_ants;
 
-  constructor(address __ants) ERC20('EGG', 'EGG') {
-    _ants = __ants;
+  modifier onlyAntsContract() {
+    if (msg.sender != s_ants) revert Egg__OnlyAntsContractCanCallThis();
+    _;
   }
 
-  function mint(address _to, uint256 _amount) external override {
-    //solhint-disable-next-line
-    require(msg.sender == _ants, 'Only the ants contract can call this function, please refer to the ants contract');
+  constructor(address _ants) ERC20('EGG', 'EGG') {
+    s_ants = _ants;
+  }
+
+  function mint(address _to, uint256 _amount) external override onlyAntsContract {
     _mint(_to, _amount);
   }
 
