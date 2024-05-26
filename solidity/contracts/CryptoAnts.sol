@@ -49,6 +49,16 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
     emit AntSold(msg.sender, _antId);
   }
 
+  function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external {
+    if (newEggPrice == 0 || newAntPrice == 0) revert ZeroAmount();
+    if (newAntPrice >= newEggPrice) revert AntPriceMustBeLessThanEggPrice();
+
+    s_eggPrice = newEggPrice;
+    s_antPrice = newAntPrice;
+
+    emit PricesUpdated(newEggPrice, newAntPrice);
+  }
+
   function getEggPrice() public view returns (uint256) {
     return s_eggPrice;
   }

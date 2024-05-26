@@ -7,6 +7,7 @@ interface ICryptoAnts is IERC721 {
   event EggsBought(address owner, uint256 amount);
   event AntCreated(address owner, uint256 antId);
   event AntSold(address owner, uint256 antId);
+  event PricesUpdated(uint256 newEggPrice, uint256 newAntPrice);
 
   function buyEggs(uint256) external payable;
 
@@ -28,4 +29,6 @@ interface ICryptoAnts is IERC721 {
   error NotAntOwner();
 
   error TransferFailed();
+
+  error AntPriceMustBeLessThanEggPrice();
 }
