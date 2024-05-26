@@ -7,15 +7,15 @@ import {IEgg} from './interfaces/IEgg.sol';
 error Egg__OnlyAntsContractCanCallThis();
 
 contract Egg is ERC20, IEgg {
-  address private s_ants;
+  address private immutable i_ants;
 
   modifier onlyAntsContract() {
-    if (msg.sender != s_ants) revert Egg__OnlyAntsContractCanCallThis();
+    if (msg.sender != i_ants) revert Egg__OnlyAntsContractCanCallThis();
     _;
   }
 
   constructor(address _ants) ERC20('EGG', 'EGG') {
-    s_ants = _ants;
+    i_ants = _ants;
   }
 
   function mint(address _to, uint256 _amount) external override onlyAntsContract {
