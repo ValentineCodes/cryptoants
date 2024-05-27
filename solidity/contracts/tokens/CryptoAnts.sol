@@ -2,17 +2,15 @@
 pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import {ConfirmedOwner} from "@chainlink/contracts@1.1.1/src/v0.8/shared/access/ConfirmedOwner.sol";
-import {VRFV2WrapperConsumerBase} from "@chainlink/contracts@1.1.1/src/v0.8/vrf/VRFV2WrapperConsumerBase.sol";
-import {LinkTokenInterface} from "@chainlink/contracts@1.1.1/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
+import {ConfirmedOwner} from "@chainlink/contracts/src/v0.8/shared/access/ConfirmedOwner.sol";
+import {VRFV2WrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/VRFV2WrapperConsumerBase.sol";
+import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {IEgg} from '../interfaces/IEgg.sol';
 import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 
 contract CryptoAnts is 
     ICryptoAnts, 
     ERC721, 
-    Ownable,     
     VRFV2WrapperConsumerBase,
     ConfirmedOwner 
 {
@@ -20,7 +18,7 @@ contract CryptoAnts is
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
-  uint256[] private s_soldIds;
+  uint256[] private s_availableIds;
 
   uint256 public constant OVIPOSITION_DELAY = 3 days;
   mapping(uint256 antId => uint256 oviPositionPeriod) private s_oviPositionPeriod;
@@ -42,10 +40,9 @@ contract CryptoAnts is
 
   address private constant WRAPPER_ADDRESS = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
 
-  constructor(address _eggs, address governance) 
+  constructor(address _eggs, address _governance) 
     ERC721('Crypto Ants', 'ANTS') 
-    Ownable(governance) 
-    ConfirmedOwner(msg.sender)
+    ConfirmedOwner(_governance)
     VRFV2WrapperConsumerBase(LINK_ADDRESS, WRAPPER_ADDRESS)
   {
     eggs = IEgg(_eggs);
@@ -65,10 +62,10 @@ contract CryptoAnts is
 
     uint256 _antId;
 
-    if (s_soldIds.length == 0) {
+    if (s_availableIds.length == 0) {
       _antId = ++s_antsCreated;
     } else {
-      _antId = s_soldIds[0];
+      _antId = s_availableIds[0];
       s_antsCreated++;
     }
 
@@ -92,7 +89,7 @@ contract CryptoAnts is
 
     delete s_oviPositionPeriod[_antId];
 
-    s_soldIds.push(_antId);
+    s_availableIds.push(_antId);
 
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
@@ -114,10 +111,10 @@ contract CryptoAnts is
         NUM_WORDS
       );
 
-      s_ovipositionRequests[requestId] = Ant{{
+      s_ovipositionRequests[requestId] = Ant({
         owner: msg.sender,
         id: _antId
-      }};
+      });
     }
   }
 
@@ -128,8 +125,29 @@ contract CryptoAnts is
     Ant memory ant = s_ovipositionRequests[_requestId];
     if(ant.owner == address(0)) revert RequestNotFound();
     
+    uint256 eggsToLay = (_randomWords[0] % 10) + 1;
+    uint256 dyingChance = (eggsToLay * 10) - 10;
+    bool willDie = (_randomWords[1] % 100) < dyingChance;
 
+    _layEggs(ant.owner, ant.id, eggsToLay, willDie);
   }
+
+  function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, bool _willDie) private {
+    eggs.mint(_owner, _eggsToLay);
+
+    if(_willDie){
+      _burn(_antId);
+      s_antsCreated--;
+      s_availableIds.push(_antId);
+    }
+
+    emit EggsLayed({
+      owner: _owner,
+      antId: _antId,
+      eggsLayed: _eggsToLay,
+      isAntDead: _willDie
+    });
+  } 
 
   function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {
     if (newEggPrice == 0 || newAntPrice == 0) revert ZeroAmount();
@@ -146,7 +164,7 @@ contract CryptoAnts is
   */
   function withdrawLink() public onlyOwner {
     LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
-    if(ink.transfer(msg.sender, link.balanceOf(address(this))) == false) revert TransferFailed();
+    if(link.transfer(msg.sender, link.balanceOf(address(this))) == false) revert TransferFailed();
   }
 
   function getEggPrice() public view returns (uint256) {
