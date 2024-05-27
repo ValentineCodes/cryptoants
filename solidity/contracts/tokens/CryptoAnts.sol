@@ -13,6 +13,9 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   uint256 private s_antsCreated = 0;
   uint256[] private s_soldIds;
 
+  uint256 public constant OVIPOSITION_DELAY = 3 days;
+  mapping(uint256 antId => uint256 oviPositionPeriod) private s_oviPositionPeriod;
+
   constructor(address _eggs, address governance) ERC721('Crypto Ants', 'ANTS') Ownable(governance) {
     eggs = IEgg(_eggs);
   }
@@ -44,6 +47,8 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
 
     _mint(msg.sender, _antId);
 
+    s_oviPositionPeriod[_antId] = block.timestamp + 10 minutes;
+
     emit AntCreated(msg.sender, _antId);
   }
 
@@ -53,6 +58,8 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
     _burn(_antId);
 
     s_antsCreated--;
+
+    delete s_oviPositionPeriod[_antId];
 
     s_soldIds.push(_antId);
 
