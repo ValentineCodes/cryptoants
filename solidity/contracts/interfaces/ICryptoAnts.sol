@@ -33,4 +33,6 @@ interface ICryptoAnts is IERC721 {
   error AntPriceMustBeLessThanEggPrice();
 
   error RequestNotFound();
+
+  error PreOvipositionPeriod();
 }

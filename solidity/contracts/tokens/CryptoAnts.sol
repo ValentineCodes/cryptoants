@@ -103,16 +103,22 @@ contract CryptoAnts is
   function initOviposition(uint256 _antId) external returns (uint256 requestId) {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
-    requestId = requestRandomness(
-      CALLBACK_GAS_LIMIT,
-      REQUEST_CONFIRMATIONS,
-      NUM_WORDS
-    );
+    uint256 oviPositionPeriod = s_oviPositionPeriod[_antId];
+    if (block.timestamp < oviPositionPeriod) revert PreOvipositionPeriod();
+    if(block.timestamp > oviPositionPeriod + OVIPOSITION_DELAY){
+      s_oviPositionPeriod[_antId] = block.timestamp + 10 minutes;
+    } else {
+      requestId = requestRandomness(
+        CALLBACK_GAS_LIMIT,
+        REQUEST_CONFIRMATIONS,
+        NUM_WORDS
+      );
 
-    s_ovipositionRequests[requestId] = Ant{{
-      owner: msg.sender,
-      id: _antId
-    }};
+      s_ovipositionRequests[requestId] = Ant{{
+        owner: msg.sender,
+        id: _antId
+      }};
+    }
   }
 
   function fulfillRandomWords(
@@ -122,7 +128,7 @@ contract CryptoAnts is
     Ant memory ant = s_ovipositionRequests[_requestId];
     if(ant.owner == address(0)) revert RequestNotFound();
     
-    
+
   }
 
   function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {
