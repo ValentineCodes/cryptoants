@@ -3,10 +3,19 @@ pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
+import {ConfirmedOwner} from "@chainlink/contracts@1.1.1/src/v0.8/shared/access/ConfirmedOwner.sol";
+import {VRFV2WrapperConsumerBase} from "@chainlink/contracts@1.1.1/src/v0.8/vrf/VRFV2WrapperConsumerBase.sol";
+import {LinkTokenInterface} from "@chainlink/contracts@1.1.1/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {IEgg} from '../interfaces/IEgg.sol';
 import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 
-contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
+contract CryptoAnts is 
+    ICryptoAnts, 
+    ERC721, 
+    Ownable,     
+    VRFV2WrapperConsumerBase,
+    ConfirmedOwner 
+{
   IEgg public immutable eggs;
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
@@ -16,7 +25,33 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   uint256 public constant OVIPOSITION_DELAY = 3 days;
   mapping(uint256 antId => uint256 oviPositionPeriod) private s_oviPositionPeriod;
 
-  constructor(address _eggs, address governance) ERC721('Crypto Ants', 'ANTS') Ownable(governance) {
+  struct Ant {
+    address owner;
+    uint256 id;
+  }
+
+  mapping(uint256 requestId => Ant ant) private s_ovipositionRequests;
+
+  uint32 private constant CALLBACK_GAS_LIMIT = 100000;
+
+  uint16 private constant REQUEST_CONFIRMATIONS = 3;
+
+  // For this example, retrieve 2 random values in one request.
+  // Cannot exceed VRFV2Wrapper.getConfig().maxNumWords.
+  uint32 private constant NUM_WORDS = 2;
+
+  // Address LINK - hardcoded for Sepolia
+  address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+
+  // address WRAPPER - hardcoded for Sepolia
+  address private constant WRAPPER_ADDRESS = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
+
+  constructor(address _eggs, address governance) 
+    ERC721('Crypto Ants', 'ANTS') 
+    Ownable(governance) 
+    ConfirmedOwner(msg.sender)
+    VRFV2WrapperConsumerBase(LINK_ADDRESS, WRAPPER_ADDRESS)
+  {
     eggs = IEgg(_eggs);
   }
 
@@ -77,6 +112,14 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
     s_antPrice = newAntPrice;
 
     emit PricesUpdated(newEggPrice, newAntPrice);
+  }
+
+  /**
+  * Allow withdraw of Link tokens from the contract
+  */
+  function withdrawLink() public onlyOwner {
+    LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
+    if(ink.transfer(msg.sender, link.balanceOf(address(this))) == false) revert TransferFailed();
   }
 
   function getEggPrice() public view returns (uint256) {
