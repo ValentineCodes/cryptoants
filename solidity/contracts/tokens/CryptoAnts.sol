@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 import '@openzeppelin/token/ERC721/ERC721.sol';
 import '@openzeppelin/access/Ownable.sol';
-import {IEgg} from './interfaces/IEgg.sol';
-import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
+import {IEgg} from '../interfaces/IEgg.sol';
+import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 
 contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   IEgg public immutable eggs;

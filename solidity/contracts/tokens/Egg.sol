@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import '@openzeppelin/token/ERC20/ERC20.sol';
-import {IEgg} from './interfaces/IEgg.sol';
+import {IEgg} from '../interfaces/IEgg.sol';
 
 error Egg__OnlyAntsContractCanCallThis();
 

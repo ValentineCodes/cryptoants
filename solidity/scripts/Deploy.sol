@@ -2,8 +2,8 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import {Script} from 'forge-std/Script.sol';
-import {ICryptoAnts, CryptoAnts} from 'contracts/CryptoAnts.sol';
-import {IEgg, Egg} from 'contracts/Egg.sol';
+import {ICryptoAnts, CryptoAnts} from 'contracts/tokens/CryptoAnts.sol';
+import {IEgg, Egg} from 'contracts/tokens/Egg.sol';
 
 contract Deploy is Script {
   ICryptoAnts internal _cryptoAnts;
