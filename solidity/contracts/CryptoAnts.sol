@@ -2,10 +2,11 @@
 pragma solidity 0.8.19;
 
 import '@openzeppelin/token/ERC721/ERC721.sol';
+import '@openzeppelin/access/Ownable.sol';
 import {IEgg} from './interfaces/IEgg.sol';
 import {ICryptoAnts} from './interfaces/ICryptoAnts.sol';
 
-contract CryptoAnts is ICryptoAnts, ERC721 {
+contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   IEgg public immutable eggs;
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
@@ -49,7 +50,7 @@ contract CryptoAnts is ICryptoAnts, ERC721 {
     emit AntSold(msg.sender, _antId);
   }
 
-  function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external {
+  function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {
     if (newEggPrice == 0 || newAntPrice == 0) revert ZeroAmount();
     if (newAntPrice >= newEggPrice) revert AntPriceMustBeLessThanEggPrice();
 
