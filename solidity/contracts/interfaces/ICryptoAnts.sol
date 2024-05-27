@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
-import '@openzeppelin/token/ERC721/IERC721.sol';
+import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
 interface ICryptoAnts is IERC721 {
   event EggsBought(address owner, uint256 amount);

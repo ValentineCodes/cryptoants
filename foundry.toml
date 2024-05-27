@@ -11,7 +11,7 @@ multiline_func_header = 'params_first'
 runs = 1000
 
 [profile.default]
-solc = '0.8.19'
+solc = '0.8.20'
 src = 'solidity'
 test = 'solidity/test'
 out = 'out'

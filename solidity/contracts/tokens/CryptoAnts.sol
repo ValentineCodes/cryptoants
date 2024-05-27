@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
-import '@openzeppelin/token/ERC721/ERC721.sol';
-import '@openzeppelin/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 import {IEgg} from '../interfaces/IEgg.sol';
 import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 
@@ -12,7 +12,7 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
 
-  constructor(address _eggs) ERC721('Crypto Ants', 'ANTS') {
+  constructor(address _eggs, address governance) ERC721('Crypto Ants', 'ANTS') Ownable(governance) {
     eggs = IEgg(_eggs);
   }
 

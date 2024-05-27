@@ -15,9 +15,9 @@ contract E2ECryptoAnts is Test, TestUtils {
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK);
-    _eggs = IEgg(addressFrom(address(this), 1));
-    _cryptoAnts = new CryptoAnts(address(_eggs));
-    _eggs = new Egg(address(_cryptoAnts));
+    // _eggs = IEgg(addressFrom(address(this), 1));
+    // _cryptoAnts = new CryptoAnts(address(_eggs));
+    // _eggs = new Egg(address(_cryptoAnts));
   }
 
   function testOnlyAllowCryptoAntsToMintEggs() public {}
