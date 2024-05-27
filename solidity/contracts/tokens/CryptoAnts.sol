@@ -162,9 +162,11 @@ contract CryptoAnts is
   /**
   * Allow withdraw of Link tokens from the contract
   */
-  function withdrawLink() public onlyOwner {
+  function withdrawLink(address _receiver) public onlyOwner {
+    if(_receiver == address(0)) revert ZeroAddress();
+
     LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
-    if(link.transfer(msg.sender, link.balanceOf(address(this))) == false) revert TransferFailed();
+    if(link.transfer(_receiver, link.balanceOf(address(this))) == false) revert TransferFailed();
   }
 
   function getEggPrice() public view returns (uint256) {

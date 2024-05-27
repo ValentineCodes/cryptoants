@@ -18,7 +18,7 @@ interface ICryptoAnts is IERC721 {
 
   event AntSold();
 
-  error NoZeroAddress();
+  error ZeroAddress();
 
   event AntCreated();
 
