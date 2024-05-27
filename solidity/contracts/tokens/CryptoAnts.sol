@@ -11,6 +11,7 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
+  uint256[] private s_soldIds;
 
   constructor(address _eggs, address governance) ERC721('Crypto Ants', 'ANTS') Ownable(governance) {
     eggs = IEgg(_eggs);
@@ -18,7 +19,6 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
 
   function buyEggs(uint256 _amount) external payable {
     if (_amount == 0) revert ZeroAmount();
-
     if ((_amount * s_eggPrice) != msg.value) revert WrongEtherSent();
 
     eggs.mint(msg.sender, _amount);
@@ -28,7 +28,15 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
 
   function createAnt() external {
     if (eggs.balanceOf(msg.sender) < 1) revert NoEggs();
-    uint256 _antId = ++s_antsCreated;
+
+    uint256 _antId;
+
+    if (s_soldIds.length == 0) {
+      _antId = ++s_antsCreated;
+    } else {
+      _antId = s_soldIds[0];
+      s_antsCreated++;
+    }
 
     if (_ownerOf(_antId) != address(0)) revert AlreadyExists();
 
@@ -43,6 +51,10 @@ contract CryptoAnts is ICryptoAnts, ERC721, Ownable {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
     _burn(_antId);
+
+    s_antsCreated--;
+
+    s_soldIds.push(_antId);
 
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
