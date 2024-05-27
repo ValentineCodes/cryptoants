@@ -36,14 +36,10 @@ contract CryptoAnts is
 
   uint16 private constant REQUEST_CONFIRMATIONS = 3;
 
-  // For this example, retrieve 2 random values in one request.
-  // Cannot exceed VRFV2Wrapper.getConfig().maxNumWords.
   uint32 private constant NUM_WORDS = 2;
 
-  // Address LINK - hardcoded for Sepolia
   address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
 
-  // address WRAPPER - hardcoded for Sepolia
   address private constant WRAPPER_ADDRESS = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
 
   constructor(address _eggs, address governance) 
@@ -102,6 +98,31 @@ contract CryptoAnts is
     if (!success) revert TransferFailed();
 
     emit AntSold(msg.sender, _antId);
+  }
+
+  function initOviposition(uint256 _antId) external returns (uint256 requestId) {
+    if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
+
+    requestId = requestRandomness(
+      CALLBACK_GAS_LIMIT,
+      REQUEST_CONFIRMATIONS,
+      NUM_WORDS
+    );
+
+    s_ovipositionRequests[requestId] = Ant{{
+      owner: msg.sender,
+      id: _antId
+    }};
+  }
+
+  function fulfillRandomWords(
+    uint256 _requestId,
+    uint256[] memory _randomWords
+  ) internal override {
+    Ant memory ant = s_ovipositionRequests[_requestId];
+    if(ant.owner == address(0)) revert RequestNotFound();
+    
+    
   }
 
   function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {

@@ -31,4 +31,6 @@ interface ICryptoAnts is IERC721 {
   error TransferFailed();
 
   error AntPriceMustBeLessThanEggPrice();
+
+  error RequestNotFound();
 }
