@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import {Test} from 'forge-std/Test.sol';
+import {Vm} from "forge-std/Vm.sol";
 import {TestUtils} from 'test/TestUtils.sol';
 import {console} from 'forge-std/console.sol';
 import {GovernanceToken} from "contracts/governance/GovernanceToken.sol";
@@ -24,7 +25,7 @@ contract E2ECryptoAnts is Test, TestUtils {
   address internal bob = makeAddr('bob');
 
   address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-  uint256 private constant AMOUNT_TO_FUND_ANTS = 5;
+  uint256 private constant AMOUNT_TO_FUND_ANTS = 5 ether;
 
   uint256 constant MIN_DELAY = 1;
   address[] proposers;
@@ -123,6 +124,49 @@ contract E2ECryptoAnts is Test, TestUtils {
     ants.createAnt();
 
     assertEq(ants.ownerOf(antId), deployer);
+
+    vm.stopPrank();
+  }
+
+  function testOviposition() public {
+    createAnt();
+
+    uint256 _antId = 1;
+
+    skip(10 minutes);
+
+    vm.startPrank(deployer);
+
+    ants.buyEggs{value: ants.getEggPrice()}(1);
+
+    uint256 prevEggsBalance = egg.balanceOf(deployer);
+
+    vm.recordLogs();
+
+    ants.initOviposition(_antId);
+
+    vm.roll(block.number + 50);
+
+    assert(egg.balanceOf(deployer) > prevEggsBalance);
+
+    // Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    // (
+    //   address owner,
+    //   uint256 antId,
+    //   uint256 eggsLayed,
+    //   bool isAntDead
+    // ) = abi.decode(entries[2].data, (address, uint256, uint256, bool));
+
+    // if(isAntDead){
+    //   bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
+    //   vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
+    //   ants.ownerOf(antId);
+    //   console.log("Ant died but layed ", eggsLayed);
+    // } else {
+    //   console.log("Ant layed ", eggsLayed);
+    // }
+    // assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLayed);
 
     vm.stopPrank();
   }
