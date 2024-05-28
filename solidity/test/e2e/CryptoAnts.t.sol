@@ -1,23 +1,73 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity 0.8.20;
 
 import {Test} from 'forge-std/Test.sol';
-import {CryptoAnts, ICryptoAnts} from 'contracts/tokens/CryptoAnts.sol';
-import {IEgg, Egg} from 'contracts/tokens/Egg.sol';
 import {TestUtils} from 'test/TestUtils.sol';
 import {console} from 'forge-std/console.sol';
+import {GovernanceToken} from "contracts/governance/GovernanceToken.sol";
+import {GovernanceTimeLock} from "contracts/governance/GovernanceTimeLock.sol";
+import {GovernorContract} from "contracts/governance/GovernorContract.sol";
+import {CryptoAnts} from "contracts/tokens/CryptoAnts.sol";
+import {Egg} from "contracts/tokens/Egg.sol";
+import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
+
+error InvalidPrivateKey(string);
+error TransferFailed();
 
 contract E2ECryptoAnts is Test, TestUtils {
-  uint256 internal constant FORK_BLOCK = 17_052_487;
-  ICryptoAnts internal _cryptoAnts;
+  uint256 internal constant FORK_BLOCK = 5_993_582;
+
+  address internal deployer;
   address internal _owner = makeAddr('owner');
-  IEgg internal _eggs;
+
+  address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+  uint256 private constant AMOUNT_TO_FUND_ANTS = 5;
+
+  uint256 constant MIN_DELAY = 1;
+  address[] proposers;
+  address[] executors;
+
+  GovernanceToken internal governanceToken;
+  GovernanceTimeLock internal governanceTimeLock;
+  GovernorContract internal governorContract;
+
+  Egg internal egg;
+  CryptoAnts internal ants;
+  LinkTokenInterface internal link;
 
   function setUp() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK);
-    // _eggs = IEgg(addressFrom(address(this), 1));
-    // _cryptoAnts = new CryptoAnts(address(_eggs));
-    // _eggs = new Egg(address(_cryptoAnts));
+    vm.createSelectFork(vm.rpcUrl('sepolia'), FORK_BLOCK);
+    
+    deployer = vm.rememberKey(vm.envUint('DEPLOYER_PRIVATE_KEY'));
+    if(deployer == address(0)) revert InvalidPrivateKey("You don't have a deployer account. Make sure you have set DEPLOYER_PRIVATE_KEY in .env");
+
+    vm.prank(deployer);
+    governanceToken = new GovernanceToken();
+
+    governanceToken.delegate(deployer);
+
+    governanceTimeLock = new GovernanceTimeLock(MIN_DELAY, proposers, executors);
+
+    governorContract = new GovernorContract(governanceToken, governanceTimeLock);
+
+    bytes32 proposerRole = governanceTimeLock.PROPOSER_ROLE();
+    bytes32 executorRole = governanceTimeLock.EXECUTOR_ROLE();
+    bytes32 timelockAdminRole = governanceTimeLock.DEFAULT_ADMIN_ROLE();
+
+    governanceTimeLock.grantRole(proposerRole, address(governorContract));
+    governanceTimeLock.grantRole(executorRole, address(0));
+    governanceTimeLock.revokeRole(timelockAdminRole, deployer);
+
+    egg = new Egg();
+
+    ants = new CryptoAnts(address(egg), address(governanceTimeLock));
+
+    link = LinkTokenInterface(LINK_ADDRESS);
+
+    vm.prank(deployer);
+    if(link.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
+
+    egg.initialize(address(ants));
   }
 
   function testOnlyAllowCryptoAntsToMintEggs() public {}

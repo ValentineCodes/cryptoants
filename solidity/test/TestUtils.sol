@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity 0.8.20;
 
 contract TestUtils {
   /// @notice          compute the future address where a contract will be deployed, based on the deployer nonce and address
