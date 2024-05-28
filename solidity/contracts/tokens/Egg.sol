@@ -2,19 +2,26 @@
 pragma solidity 0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IEgg} from '../interfaces/IEgg.sol';
 
 error Egg__OnlyAntsContractCanCallThis();
 
-contract Egg is ERC20, IEgg {
-  address private immutable i_ants;
+contract Egg is 
+  ERC20, 
+  IEgg, 
+  Initializable 
+{
+  address private i_ants;
 
   modifier onlyAntsContract() {
     if (msg.sender != i_ants) revert Egg__OnlyAntsContractCanCallThis();
     _;
   }
 
-  constructor(address _ants) ERC20('EGG', 'EGG') {
+  constructor() ERC20('EGG', 'EGG') {}
+
+  function initialize(address _ants) external initializer {
     i_ants = _ants;
   }
 
