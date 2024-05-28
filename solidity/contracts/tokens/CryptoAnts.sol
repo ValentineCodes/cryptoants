@@ -21,7 +21,7 @@ contract CryptoAnts is
   uint256[] private s_antsToReincarnate;
 
   uint256 public constant OVIPOSITION_DELAY = 3 days;
-  mapping(uint256 antId => uint256 oviPositionPeriod) private s_oviPositionPeriod;
+  mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod;
 
   struct Ant {
     address owner;
@@ -75,7 +75,7 @@ contract CryptoAnts is
 
     _mint(msg.sender, _antId);
 
-    s_oviPositionPeriod[_antId] = block.timestamp + 10 minutes;
+    s_ovipositionPeriod[_antId] = block.timestamp + 10 minutes;
 
     emit AntCreated(msg.sender, _antId);
   }
@@ -87,7 +87,7 @@ contract CryptoAnts is
 
     s_antsCreated--;
 
-    delete s_oviPositionPeriod[_antId];
+    delete s_ovipositionPeriod[_antId];
 
     s_antsToReincarnate.push(_antId);
 
@@ -100,10 +100,10 @@ contract CryptoAnts is
   function initOviposition(uint256 _antId) external returns (uint256 requestId) {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
-    uint256 oviPositionPeriod = s_oviPositionPeriod[_antId];
-    if (block.timestamp < oviPositionPeriod) revert PreOvipositionPeriod();
-    if(block.timestamp > oviPositionPeriod + OVIPOSITION_DELAY){
-      s_oviPositionPeriod[_antId] = block.timestamp + 10 minutes;
+    uint256 ovipositionPeriod = s_ovipositionPeriod[_antId];
+    if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
+    if(block.timestamp > ovipositionPeriod + OVIPOSITION_DELAY){
+      s_ovipositionPeriod[_antId] = block.timestamp + 10 minutes;
     } else {
       requestId = requestRandomness(
         CALLBACK_GAS_LIMIT,
@@ -149,7 +149,7 @@ contract CryptoAnts is
       if(willDie){
         _burn(_antId);
         s_antsCreated--;
-        delete s_oviPositionPeriod[_antId];
+        delete s_ovipositionPeriod[_antId];
         s_antsToReincarnate.push(_antId);
         break;
       }
@@ -193,5 +193,9 @@ contract CryptoAnts is
 
   function getAntsCreated() public view returns (uint256) {
     return s_antsCreated;
+  }
+
+  function getOvipositionPeriod(uint256 _antId) external view returns (uint256 ovipositionPeriod) {
+    return s_ovipositionPeriod[_antId];
   }
 }
