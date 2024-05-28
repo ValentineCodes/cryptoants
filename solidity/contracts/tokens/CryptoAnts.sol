@@ -83,13 +83,7 @@ contract CryptoAnts is
   function sellAnt(uint256 _antId) external {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
-    _burn(_antId);
-
-    s_antsCreated--;
-
-    delete s_ovipositionPeriod[_antId];
-
-    s_antsToReincarnate.push(_antId);
+    _killAnt(_antId);
 
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
@@ -147,10 +141,7 @@ contract CryptoAnts is
       }
 
       if(willDie){
-        _burn(_antId);
-        s_antsCreated--;
-        delete s_ovipositionPeriod[_antId];
-        s_antsToReincarnate.push(_antId);
+        _killAnt(_antId);
         break;
       }
     }
@@ -162,6 +153,16 @@ contract CryptoAnts is
       isAntDead: willDie
     });
   } 
+
+  function _killAnt(uint256 _antId) private {
+    _burn(_antId);
+
+    s_antsCreated--;
+
+    delete s_ovipositionPeriod[_antId];
+
+    s_antsToReincarnate.push(_antId);
+  }
 
   function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {
     if (newEggPrice == 0 || newAntPrice == 0) revert ZeroAmount();
