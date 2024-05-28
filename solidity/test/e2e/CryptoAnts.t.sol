@@ -228,6 +228,59 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.stopPrank();
   }
+    function testCanWithdrawLink() public {
+    vm.startPrank(deployer);
+
+    address[] memory targets = new address[](1);
+    targets[0] = address(ants);
+
+    uint256[] memory values = new uint256[](1);
+    values[0] = 0;
+
+    bytes[] memory calldatas = new bytes[](1);
+    calldatas[0] = abi.encodePacked(CryptoAnts.withdrawLink.selector, abi.encode(deployer, 1 ether));
+
+    string memory proposalDescription = "Withdraw LINK tokens";
+
+    uint256 proposalId = governorContract.propose(
+      targets,
+      values,
+      calldatas,
+      proposalDescription
+    );
+
+    uint256 votingDelay = governorContract.votingDelay();
+    uint256 votingPeriod = governorContract.votingPeriod();
+
+    vm.roll(block.number + votingDelay + 1);
+    vm.warp(block.timestamp + ((votingDelay + 1) * 12));
+
+    governorContract.castVoteWithReason(proposalId, 1, "Greed!");
+
+    vm.roll(block.number + votingPeriod + 1);
+    vm.warp(block.timestamp + ((votingPeriod + 1) * 12));
+
+    governorContract.queue(
+      targets,
+      values,
+      calldatas,
+      keccak256(bytes(proposalDescription))
+    );
+
+    skip(1);
+
+    uint256 prevBalance = link.balanceOf(deployer);
+    governorContract.execute(
+      targets,
+      values,
+      calldatas,
+      keccak256(bytes(proposalDescription))
+    );
+
+    assertEq(link.balanceOf(deployer), prevBalance + 1 ether);
+
+    vm.stopPrank();
+  }
   function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
 
   function createAnt() internal {
