@@ -18,7 +18,7 @@ contract CryptoAnts is
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
-  uint256[] private s_availableIds;
+  uint256[] private s_antsToReincarnate;
 
   uint256 public constant OVIPOSITION_DELAY = 3 days;
   mapping(uint256 antId => uint256 oviPositionPeriod) private s_oviPositionPeriod;
@@ -62,10 +62,10 @@ contract CryptoAnts is
 
     uint256 _antId;
 
-    if (s_availableIds.length == 0) {
+    if (s_antsToReincarnate.length == 0) {
       _antId = ++s_antsCreated;
     } else {
-      _antId = s_availableIds[0];
+      _antId = s_antsToReincarnate[0];
       s_antsCreated++;
     }
 
@@ -89,7 +89,7 @@ contract CryptoAnts is
 
     delete s_oviPositionPeriod[_antId];
 
-    s_availableIds.push(_antId);
+    s_antsToReincarnate.push(_antId);
 
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
@@ -127,25 +127,39 @@ contract CryptoAnts is
     
     uint256 eggsToLay = (_randomWords[0] % 10) + 1;
     uint256 dyingChance = (eggsToLay * 10) - 10;
-    bool willDie = (_randomWords[1] % 100) < dyingChance;
 
-    _layEggs(ant.owner, ant.id, eggsToLay, willDie);
+    _layEggs(ant.owner, ant.id, eggsToLay, dyingChance, _randomWords[1]);
   }
 
-  function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, bool _willDie) private {
-    eggs.mint(_owner, _eggsToLay);
+  function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
 
-    if(_willDie){
-      _burn(_antId);
-      s_antsCreated--;
-      s_availableIds.push(_antId);
+    uint256 eggsLayed;
+    bool willDie;
+    uint256 randomNumber = _randomNumber % 100;
+
+    for(uint8 i = 0; i < _eggsToLay; i++){
+      eggs.mint(_owner, 1);
+      eggsLayed++;
+
+      if(randomNumber < _dyingChance) {
+        willDie = true;
+      } else {
+        randomNumber--;
+      }
+
+      if(willDie){
+        _burn(_antId);
+        s_antsCreated--;
+        s_antsToReincarnate.push(_antId);
+        break;
+      }
     }
 
     emit EggsLayed({
       owner: _owner,
       antId: _antId,
-      eggsLayed: _eggsToLay,
-      isAntDead: _willDie
+      eggsLayed: eggsLayed,
+      isAntDead: willDie
     });
   } 
 
