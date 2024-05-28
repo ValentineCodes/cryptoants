@@ -13,12 +13,14 @@ import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interface
 
 error InvalidPrivateKey(string);
 error TransferFailed();
+error Egg__OnlyAntsContractCanCallThis();
 
 contract E2ECryptoAnts is Test, TestUtils {
   uint256 internal constant FORK_BLOCK = 5_993_582;
 
   address internal deployer;
-  address internal _owner = makeAddr('owner');
+  address internal alice = makeAddr('alice');
+  address internal bob = makeAddr('bob');
 
   address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
   uint256 private constant AMOUNT_TO_FUND_ANTS = 5;
@@ -70,7 +72,14 @@ contract E2ECryptoAnts is Test, TestUtils {
     egg.initialize(address(ants));
   }
 
-  function testOnlyAllowCryptoAntsToMintEggs() public {}
+  function testOnlyAllowCryptoAntsToMintEggs() public {
+    vm.startPrank(deployer);
+    vm.expectRevert(Egg__OnlyAntsContractCanCallThis.selector);
+
+    egg.mint(alice, 1);
+
+    vm.stopPrank();
+  }
   function testBuyAnEggAndCreateNewAnt() public {}
   function testSendFundsToTheUserWhoSellsAnts() public {}
   function testBurnTheAntAfterTheUserSellsIt() public {}
