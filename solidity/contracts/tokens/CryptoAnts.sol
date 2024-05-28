@@ -132,7 +132,6 @@ contract CryptoAnts is
   }
 
   function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
-
     uint256 eggsLayed;
     bool willDie;
     uint256 randomNumber = _randomNumber % 100;
@@ -150,6 +149,7 @@ contract CryptoAnts is
       if(willDie){
         _burn(_antId);
         s_antsCreated--;
+        delete s_oviPositionPeriod[_antId];
         s_antsToReincarnate.push(_antId);
         break;
       }
