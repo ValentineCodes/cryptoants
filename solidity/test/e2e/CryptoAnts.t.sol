@@ -80,7 +80,24 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.stopPrank();
   }
-  function testBuyAnEggAndCreateNewAnt() public {}
+  function testBuyAnEggAndCreateNewAnt() public {
+    vm.startPrank(deployer);
+
+    // Buy an egg
+    ants.buyEggs{value: ants.getEggPrice()}(1);
+
+    assertEq(egg.balanceOf(deployer), 1);
+    assertEq(address(ants).balance, ants.getEggPrice());
+
+    // Create ant
+    ants.createAnt();
+
+    assertEq(ants.balanceOf(deployer), 1);
+    assertEq(egg.balanceOf(deployer), 0);
+    assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
+
+    vm.stopPrank();
+  }
   function testSendFundsToTheUserWhoSellsAnts() public {}
   function testBurnTheAntAfterTheUserSellsIt() public {}
 
