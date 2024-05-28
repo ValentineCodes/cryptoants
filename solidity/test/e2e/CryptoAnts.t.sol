@@ -31,6 +31,9 @@ contract E2ECryptoAnts is Test, TestUtils {
   address[] proposers;
   address[] executors;
 
+  uint256 private constant NEW_EGG_PRICE = 0.05 ether;
+  uint256 private constant NEW_ANT_PRICE = 0.01 ether;
+
   GovernanceToken internal governanceToken;
   GovernanceTimeLock internal governanceTimeLock;
   GovernorContract internal governorContract;
@@ -45,7 +48,8 @@ contract E2ECryptoAnts is Test, TestUtils {
     deployer = vm.rememberKey(vm.envUint('DEPLOYER_PRIVATE_KEY'));
     if(deployer == address(0)) revert InvalidPrivateKey("You don't have a deployer account. Make sure you have set DEPLOYER_PRIVATE_KEY in .env");
 
-    vm.prank(deployer);
+    vm.startPrank(deployer);
+
     governanceToken = new GovernanceToken();
 
     governanceToken.delegate(deployer);
@@ -68,10 +72,11 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     link = LinkTokenInterface(LINK_ADDRESS);
 
-    vm.prank(deployer);
     if(link.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
 
     egg.initialize(address(ants));
+
+    vm.stopPrank();
   }
 
   function testOnlyAllowCryptoAntsToMintEggs() public {
@@ -167,6 +172,59 @@ contract E2ECryptoAnts is Test, TestUtils {
     //   console.log("Ant layed ", eggsLayed);
     // }
     // assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLayed);
+
+    vm.stopPrank();
+  }
+  function testCanUpdatePrices() public {
+    vm.startPrank(deployer);
+
+    address[] memory targets = new address[](1);
+    targets[0] = address(ants);
+
+    uint256[] memory values = new uint256[](1);
+    values[0] = 0;
+
+    bytes[] memory calldatas = new bytes[](1);
+    calldatas[0] = abi.encodePacked(CryptoAnts.updatePrices.selector, abi.encode(NEW_EGG_PRICE, NEW_ANT_PRICE));
+
+    string memory proposalDescription = "Update prices";
+
+    uint256 proposalId = governorContract.propose(
+      targets,
+      values,
+      calldatas,
+      proposalDescription
+    );
+
+    uint256 votingDelay = governorContract.votingDelay();
+    uint256 votingPeriod = governorContract.votingPeriod();
+
+    vm.roll(block.number + votingDelay + 1);
+    vm.warp(block.timestamp + ((votingDelay + 1) * 12));
+
+    governorContract.castVoteWithReason(proposalId, 1, "Greed!");
+
+    vm.roll(block.number + votingPeriod + 1);
+    vm.warp(block.timestamp + ((votingPeriod + 1) * 12));
+
+    governorContract.queue(
+      targets,
+      values,
+      calldatas,
+      keccak256(bytes(proposalDescription))
+    );
+
+    skip(1);
+
+    governorContract.execute(
+      targets,
+      values,
+      calldatas,
+      keccak256(bytes(proposalDescription))
+    );
+
+    assertEq(ants.getEggPrice(), NEW_EGG_PRICE);
+    assertEq(ants.getAntPrice(), NEW_ANT_PRICE);
 
     vm.stopPrank();
   }
