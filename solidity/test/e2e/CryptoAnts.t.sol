@@ -112,11 +112,20 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.stopPrank();
   }
+  function testReincarnation() public {
+    createAnt();
 
-  /*
-    This is a completely optional test.
-    Hint: you may need `warp` to handle the egg creation cooldown
-  */
+    vm.startPrank(deployer);
+
+    uint256 antId = 1;
+    ants.sellAnt(antId);
+    ants.buyEggs{value: ants.getEggPrice()}(1);
+    ants.createAnt();
+
+    assertEq(ants.ownerOf(antId), deployer);
+
+    vm.stopPrank();
+  }
   function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
 
   function createAnt() internal {
