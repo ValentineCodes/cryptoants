@@ -14,6 +14,7 @@ import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interface
 error InvalidPrivateKey(string);
 error TransferFailed();
 error Egg__OnlyAntsContractCanCallThis();
+error ERC721NonexistentToken(uint256 tokenId);
 
 contract E2ECryptoAnts is Test, TestUtils {
   uint256 internal constant FORK_BLOCK = 5_993_582;
@@ -89,14 +90,28 @@ contract E2ECryptoAnts is Test, TestUtils {
     vm.startPrank(deployer);
 
     uint256 ethBalance = deployer.balance;
-    ants.sellAnt(1);
+    uint256 antId = 1;
+    ants.sellAnt(antId);
 
     assertEq(ants.balanceOf(deployer), 0);
     assertEq(deployer.balance, ethBalance + ants.getAntPrice());
 
     vm.stopPrank();
   }
-  function testBurnTheAntAfterTheUserSellsIt() public {}
+  function testBurnTheAntAfterTheUserSellsIt() public {
+    createAnt();
+
+    vm.startPrank(deployer);
+
+    uint256 antId = 1;
+    ants.sellAnt(antId);
+
+    bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
+    vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
+    ants.ownerOf(antId);
+
+    vm.stopPrank();
+  }
 
   /*
     This is a completely optional test.
