@@ -81,24 +81,21 @@ contract E2ECryptoAnts is Test, TestUtils {
     vm.stopPrank();
   }
   function testBuyAnEggAndCreateNewAnt() public {
+    createAnt();
+  }
+  function testSendFundsToTheUserWhoSellsAnts() public {
+    createAnt();
+
     vm.startPrank(deployer);
 
-    // Buy an egg
-    ants.buyEggs{value: ants.getEggPrice()}(1);
+    uint256 ethBalance = deployer.balance;
+    ants.sellAnt(1);
 
-    assertEq(egg.balanceOf(deployer), 1);
-    assertEq(address(ants).balance, ants.getEggPrice());
-
-    // Create ant
-    ants.createAnt();
-
-    assertEq(ants.balanceOf(deployer), 1);
-    assertEq(egg.balanceOf(deployer), 0);
-    assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
+    assertEq(ants.balanceOf(deployer), 0);
+    assertEq(deployer.balance, ethBalance + ants.getAntPrice());
 
     vm.stopPrank();
   }
-  function testSendFundsToTheUserWhoSellsAnts() public {}
   function testBurnTheAntAfterTheUserSellsIt() public {}
 
   /*
@@ -106,4 +103,23 @@ contract E2ECryptoAnts is Test, TestUtils {
     Hint: you may need `warp` to handle the egg creation cooldown
   */
   function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
+
+  function createAnt() internal {
+    vm.startPrank(deployer);
+
+      // Buy an egg
+      ants.buyEggs{value: ants.getEggPrice()}(1);
+
+      assertEq(egg.balanceOf(deployer), 1);
+      assertEq(address(ants).balance, ants.getEggPrice());
+
+      // Create ant
+      ants.createAnt();
+
+      assertEq(ants.balanceOf(deployer), 1);
+      assertEq(egg.balanceOf(deployer), 0);
+      assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
+
+    vm.stopPrank();
+  }
 }
