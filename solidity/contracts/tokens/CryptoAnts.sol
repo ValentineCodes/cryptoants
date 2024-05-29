@@ -185,14 +185,14 @@ contract CryptoAnts is
 
   /// @dev Lay eggs and maybe squash ant
   function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
-    uint256 eggsLayed;
+    uint256 eggsLaid;
     bool isAntDead;
     uint256 dyingChanceMeasure = _randomNumber % 100;
 
     // lay eggs one by one. Ants can lay at least One egg
     for(uint8 i = 0; i < _eggsToLay; i++){
       eggs.mint(_owner, 1);
-      eggsLayed++;
+      eggsLaid++;
 
       if(dyingChanceMeasure <= _dyingChance) {
         // squash ant and stop oviposition
@@ -204,10 +204,10 @@ contract CryptoAnts is
       }
     }
 
-    emit EggsLayed({
+    emit EggsLaid({
       owner: _owner,
       antId: _antId,
-      eggsLayed: eggsLayed,
+      eggsLaid: eggsLaid,
       isAntDead: isAntDead
     });
   } 

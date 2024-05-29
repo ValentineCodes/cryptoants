@@ -58,8 +58,10 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.startPrank(deployer);
 
+    // mints 1000 tokens to deployer
     governanceToken = new GovernanceToken();
 
+    // delegate tokens to deployer
     governanceToken.delegate(deployer);
 
     governanceTimeLock = new GovernanceTimeLock(MIN_DELAY, proposers, executors);
@@ -70,8 +72,13 @@ contract E2ECryptoAnts is Test, TestUtils {
     bytes32 executorRole = governanceTimeLock.EXECUTOR_ROLE();
     bytes32 timelockAdminRole = governanceTimeLock.DEFAULT_ADMIN_ROLE();
 
+    // governor contract the proposal role
     governanceTimeLock.grantRole(proposerRole, address(governorContract));
+
+    // anyone can execute the proposal
     governanceTimeLock.grantRole(executorRole, address(0));
+
+    // revoke admin role from deployer
     governanceTimeLock.revokeRole(timelockAdminRole, deployer);
 
     // deploy mocks
@@ -98,6 +105,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     ants = new CryptoAnts(address(egg), address(governanceTimeLock), address(linkToken), address(vrfV2Wrapper));
 
+    // func CryptoAnts with LINK tokens for Chainlink VRF
     if(linkToken.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
 
     egg.initialize(address(ants));
@@ -109,6 +117,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     vm.startPrank(deployer);
     vm.expectRevert(OnlyAntsContractCanCallThis.selector);
 
+    // revert if alice tries to mint eggs
     egg.mint(alice, 1);
 
     vm.stopPrank();
@@ -154,6 +163,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     ants.buyEggs{value: ants.getEggPrice()}(1);
     ants.createAnt();
 
+    // ensure ant was reincarnated to user
     assertEq(ants.ownerOf(antId), deployer);
 
     vm.stopPrank();
@@ -183,7 +193,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     (
       /* address owner */,
       uint256 antId,
-      uint256 eggsLayed,
+      uint256 eggsLaid,
       bool isAntDead
     ) = abi.decode(entries[7].data, (address, uint256, uint256, bool));
 
@@ -191,11 +201,13 @@ contract E2ECryptoAnts is Test, TestUtils {
       bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
       vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
       ants.ownerOf(antId);
-      console.log("Ant died but layed ", eggsLayed);
+      console.log("Ant died but layed ", eggsLaid);
     } else {
-      console.log("Ant layed ", eggsLayed);
+      console.log("Ant layed ", eggsLaid);
     }
-    assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLayed);
+
+    // ensure the eggs were laid
+    assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLaid);
 
     vm.stopPrank();
   }
@@ -247,6 +259,7 @@ contract E2ECryptoAnts is Test, TestUtils {
       keccak256(bytes(proposalDescription))
     );
 
+    // ensure prices were updated
     assertEq(ants.getEggPrice(), NEW_EGG_PRICE);
     assertEq(ants.getAntPrice(), NEW_ANT_PRICE);
 
@@ -260,14 +273,22 @@ contract E2ECryptoAnts is Test, TestUtils {
       // Buy an egg
       ants.buyEggs{value: ants.getEggPrice()}(1);
 
+      // ensure user has one egg
       assertEq(egg.balanceOf(deployer), 1);
+      
+      // ensure ants was paid
       assertEq(address(ants).balance, ants.getEggPrice());
 
       // Create ant
       ants.createAnt();
 
+      // ensure user has an ant
       assertEq(ants.balanceOf(deployer), 1);
+
+      // ensure egg was burned
       assertEq(egg.balanceOf(deployer), 0);
+
+      // ensure oviposition period was set
       assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
 
     vm.stopPrank();
