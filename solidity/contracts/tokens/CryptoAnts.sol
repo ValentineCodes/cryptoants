@@ -130,22 +130,19 @@ contract CryptoAnts is
 
   function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
     uint256 eggsLayed;
-    bool willDie;
-    uint256 randomNumber = _randomNumber % 100;
+    bool isAntDead;
+    uint256 antStrength = _randomNumber % 100;
 
     for(uint8 i = 0; i < _eggsToLay; i++){
       eggs.mint(_owner, 1);
       eggsLayed++;
 
-      if(randomNumber < _dyingChance) {
-        willDie = true;
-      } else {
-        randomNumber--;
-      }
-
-      if(willDie){
+      if(antStrength <= _dyingChance) {
+        isAntDead = true;
         _killAnt(_antId);
         break;
+      } else {
+        antStrength--;
       }
     }
 
@@ -153,7 +150,7 @@ contract CryptoAnts is
       owner: _owner,
       antId: _antId,
       eggsLayed: eggsLayed,
-      isAntDead: willDie
+      isAntDead: isAntDead
     });
   } 
 
