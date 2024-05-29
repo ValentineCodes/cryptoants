@@ -204,6 +204,11 @@ contract CryptoAnts is
       }
     }
 
+    if(!isAntDead){
+      // reset oviposition period
+      s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
+    }
+
     emit EggsLaid({
       owner: _owner,
       antId: _antId,

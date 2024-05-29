@@ -18,14 +18,14 @@ This is the note he left us:
 > - [x] EGGs should cost 0.01 ETH
 > - [x] An EGG can be used to create an ANT
 > - [x] An ANT can be sold for less ETH than the EGG price
-> - [ ] Governance should be able to change the price of an egg
-> - [ ] Finish the e2e tests
+> - [x] Governance should be able to change the price of an egg
+> - [x] Finish the e2e tests
 >
 > The following features we said they would be nice to have, but were not required, so i guess they're out of the equation for now...
 >
-> - [ ] Ants should be able to create/lay eggs once every 10 minutes
-> - [ ] Ants should be able to randomly create multiple eggs at a time. The range of how many should be reasonable (0-20?)
-> - [ ] Ants have a % chance of dying when creating eggs
+> - [x] Ants should be able to create/lay eggs once every 10 minutes
+> - [x] Ants should be able to randomly create multiple eggs at a time. The range of how many should be reasonable (0-20?)
+> - [x] Ants have a % chance of dying when creating eggs
 >
 > I feel very proud of it, I can't wait to come back from ~~Ibiza~~ Mom's to play it!
 
