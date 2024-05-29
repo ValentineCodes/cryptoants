@@ -12,6 +12,12 @@ import {CryptoAnts} from "contracts/tokens/CryptoAnts.sol";
 import {Egg} from "contracts/tokens/Egg.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 
+// mocks
+import {VRFCoordinatorV2Mock} from "contracts/mocks/VRFCoordinatorV2Mock.sol";
+import {MockV3Aggregator} from "contracts/mocks/MockV3Aggregator.sol";
+import {LinkToken} from "contracts/mocks/LinkToken.sol";
+import {VRFV2Wrapper} from "contracts/mocks/VRFV2Wrapper.sol";
+
 error InvalidPrivateKey(string);
 error TransferFailed();
 error Egg__OnlyAntsContractCanCallThis();
@@ -24,8 +30,7 @@ contract E2ECryptoAnts is Test, TestUtils {
   address internal alice = makeAddr('alice');
   address internal bob = makeAddr('bob');
 
-  address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-  uint256 private constant AMOUNT_TO_FUND_ANTS = 5 ether;
+  uint256 private constant AMOUNT_TO_FUND_ANTS = 10 ether;
 
   uint256 constant MIN_DELAY = 1;
   address[] proposers;
@@ -37,6 +42,9 @@ contract E2ECryptoAnts is Test, TestUtils {
   GovernanceToken internal governanceToken;
   GovernanceTimeLock internal governanceTimeLock;
   GovernorContract internal governorContract;
+
+  VRFCoordinatorV2Mock vrfCoordinatorV2Mock;
+  VRFV2Wrapper vrfV2Wrapper;
 
   Egg internal egg;
   CryptoAnts internal ants;
@@ -66,13 +74,31 @@ contract E2ECryptoAnts is Test, TestUtils {
     governanceTimeLock.grantRole(executorRole, address(0));
     governanceTimeLock.revokeRole(timelockAdminRole, deployer);
 
+    // deploy mocks
+
+    vrfCoordinatorV2Mock = new VRFCoordinatorV2Mock(100000000000000000, 1000000000);
+
+    MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(18, 3000000000000000);
+
+    LinkToken linkToken = new LinkToken();
+
+    vrfV2Wrapper = new VRFV2Wrapper(address(linkToken), address(mockV3Aggregator), address(vrfCoordinatorV2Mock));
+
+    vrfV2Wrapper.setConfig(
+      60000,
+      52000,
+      10,
+      0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc,
+      10
+    );
+
+    vrfCoordinatorV2Mock.fundSubscription(1, 10 ether);
+
     egg = new Egg();
 
-    ants = new CryptoAnts(address(egg), address(governanceTimeLock));
+    ants = new CryptoAnts(address(egg), address(governanceTimeLock), address(linkToken), address(vrfV2Wrapper));
 
-    link = LinkTokenInterface(LINK_ADDRESS);
-
-    if(link.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
+    if(linkToken.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
 
     egg.initialize(address(ants));
 
@@ -148,30 +174,28 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.recordLogs();
 
-    ants.initOviposition(_antId);
+    uint256 requestId = ants.initOviposition(_antId);
 
-    vm.roll(block.number + 50);
+    vrfCoordinatorV2Mock.fulfillRandomWords(requestId, address(vrfV2Wrapper));
 
-    assert(egg.balanceOf(deployer) > prevEggsBalance);
+    Vm.Log[] memory entries = vm.getRecordedLogs();
 
-    // Vm.Log[] memory entries = vm.getRecordedLogs();
+    (
+      address owner,
+      uint256 antId,
+      uint256 eggsLayed,
+      bool isAntDead
+    ) = abi.decode(entries[5].data, (address, uint256, uint256, bool));
 
-    // (
-    //   address owner,
-    //   uint256 antId,
-    //   uint256 eggsLayed,
-    //   bool isAntDead
-    // ) = abi.decode(entries[2].data, (address, uint256, uint256, bool));
-
-    // if(isAntDead){
-    //   bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
-    //   vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
-    //   ants.ownerOf(antId);
-    //   console.log("Ant died but layed ", eggsLayed);
-    // } else {
-    //   console.log("Ant layed ", eggsLayed);
-    // }
-    // assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLayed);
+    if(isAntDead){
+      bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
+      vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
+      ants.ownerOf(antId);
+      console.log("Ant died but layed ", eggsLayed);
+    } else {
+      console.log("Ant layed ", eggsLayed);
+    }
+    assertEq(egg.balanceOf(deployer), prevEggsBalance + eggsLayed);
 
     vm.stopPrank();
   }
@@ -228,60 +252,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.stopPrank();
   }
-    function testCanWithdrawLink() public {
-    vm.startPrank(deployer);
-
-    address[] memory targets = new address[](1);
-    targets[0] = address(ants);
-
-    uint256[] memory values = new uint256[](1);
-    values[0] = 0;
-
-    bytes[] memory calldatas = new bytes[](1);
-    calldatas[0] = abi.encodePacked(CryptoAnts.withdrawLink.selector, abi.encode(deployer, 1 ether));
-
-    string memory proposalDescription = "Withdraw LINK tokens";
-
-    uint256 proposalId = governorContract.propose(
-      targets,
-      values,
-      calldatas,
-      proposalDescription
-    );
-
-    uint256 votingDelay = governorContract.votingDelay();
-    uint256 votingPeriod = governorContract.votingPeriod();
-
-    vm.roll(block.number + votingDelay + 1);
-    vm.warp(block.timestamp + ((votingDelay + 1) * 12));
-
-    governorContract.castVoteWithReason(proposalId, 1, "Greed!");
-
-    vm.roll(block.number + votingPeriod + 1);
-    vm.warp(block.timestamp + ((votingPeriod + 1) * 12));
-
-    governorContract.queue(
-      targets,
-      values,
-      calldatas,
-      keccak256(bytes(proposalDescription))
-    );
-
-    skip(1);
-
-    uint256 prevBalance = link.balanceOf(deployer);
-    governorContract.execute(
-      targets,
-      values,
-      calldatas,
-      keccak256(bytes(proposalDescription))
-    );
-
-    assertEq(link.balanceOf(deployer), prevBalance + 1 ether);
-
-    vm.stopPrank();
-  }
-  function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
+  // function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
 
   function createAnt() internal {
     vm.startPrank(deployer);

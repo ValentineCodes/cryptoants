@@ -15,6 +15,7 @@ contract Deploy is Script {
   address deployer;
 
   address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+  address private constant WRAPPER_ADDRESS = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
   uint256 private constant AMOUNT_TO_FUND_ANTS = 5 ether;
 
   uint256 constant MIN_DELAY = 1;
@@ -45,7 +46,7 @@ contract Deploy is Script {
 
     Egg egg = new Egg();
 
-    CryptoAnts ants = new CryptoAnts(address(egg), address(governanceTimeLock));
+    CryptoAnts ants = new CryptoAnts(address(egg), address(governanceTimeLock), LINK_ADDRESS, WRAPPER_ADDRESS);
 
     LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
 

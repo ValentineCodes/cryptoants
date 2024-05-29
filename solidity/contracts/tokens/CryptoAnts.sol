@@ -30,22 +30,25 @@ contract CryptoAnts is
 
   mapping(uint256 requestId => Ant ant) private s_ovipositionRequests;
 
-  uint32 private constant CALLBACK_GAS_LIMIT = 100000;
+  uint32 private constant CALLBACK_GAS_LIMIT = 300000;
 
   uint16 private constant REQUEST_CONFIRMATIONS = 3;
 
   uint32 private constant NUM_WORDS = 2;
 
-  address private constant LINK_ADDRESS = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-
-  address private constant WRAPPER_ADDRESS = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
-
-  constructor(address _eggs, address _governance) 
+  address private immutable i_linkAddress;
+  constructor(
+    address _eggs, 
+    address _governance,
+    address _linkAddress,
+    address _wrapperAddress    
+  ) 
     ERC721('Crypto Ants', 'ANTS') 
     ConfirmedOwner(_governance)
-    VRFV2WrapperConsumerBase(LINK_ADDRESS, WRAPPER_ADDRESS)
+    VRFV2WrapperConsumerBase(_linkAddress, _wrapperAddress)
   {
     eggs = IEgg(_eggs);
+    i_linkAddress = _linkAddress;
   }
 
   function buyEggs(uint256 _amount) external payable {
@@ -180,7 +183,7 @@ contract CryptoAnts is
   function withdrawLink(address _receiver, uint256 _amount) public onlyOwner {
     if(_receiver == address(0)) revert ZeroAddress();
 
-    LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
+    LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
     if(link.transfer(_receiver, _amount) == false) revert TransferFailed();
   }
 
