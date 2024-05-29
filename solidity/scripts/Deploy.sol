@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import {Script} from 'forge-std/Script.sol';
+import {console} from 'forge-std/console.sol';
 import {GovernanceToken} from "contracts/governance/GovernanceToken.sol";
 import {GovernanceTimeLock} from "contracts/governance/GovernanceTimeLock.sol";
 import {GovernorContract} from "contracts/governance/GovernorContract.sol";
@@ -28,8 +29,10 @@ contract Deploy is Script {
 
     vm.startBroadcast(deployer);
 
+    // mints 1000 tokens to deployer
     GovernanceToken governanceToken = new GovernanceToken();
 
+    // delegate tokens to deployer
     governanceToken.delegate(deployer);
 
     GovernanceTimeLock governanceTimeLock = new GovernanceTimeLock(MIN_DELAY, proposers, executors);
@@ -40,19 +43,59 @@ contract Deploy is Script {
     bytes32 executorRole = governanceTimeLock.EXECUTOR_ROLE();
     bytes32 timelockAdminRole = governanceTimeLock.DEFAULT_ADMIN_ROLE();
 
+    // governor contract the proposal role
     governanceTimeLock.grantRole(proposerRole, address(governorContract));
+
+    // anyone can execute the proposal
     governanceTimeLock.grantRole(executorRole, address(0));
+
+    // revoke admin role from deployer
     governanceTimeLock.revokeRole(timelockAdminRole, deployer);
 
     Egg egg = new Egg();
 
     CryptoAnts ants = new CryptoAnts(address(egg), address(governanceTimeLock), LINK_ADDRESS, WRAPPER_ADDRESS);
 
+    // func CryptoAnts with LINK tokens for Chainlink VRF
     LinkTokenInterface link = LinkTokenInterface(LINK_ADDRESS);
-
     if(link.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
 
     egg.initialize(address(ants));
+
+    console.logString(
+        string.concat(
+            "GovernanceToken deployed at: ",
+            vm.toString(address(governanceToken))
+        )
+    );
+
+    console.logString(
+        string.concat(
+            "GovernanceTimeLock deployed at: ",
+            vm.toString(address(governanceTimeLock))
+        )
+    );
+
+    console.logString(
+        string.concat(
+            "GovernorContract deployed at: ",
+            vm.toString(address(governorContract))
+        )
+    );
+
+    console.logString(
+        string.concat(
+            "Egg deployed at: ",
+            vm.toString(address(egg))
+        )
+    );
+
+    console.logString(
+        string.concat(
+            "CryptoAnts deployed at: ",
+            vm.toString(address(ants))
+        )
+    );
 
     vm.stopBroadcast();
   }
