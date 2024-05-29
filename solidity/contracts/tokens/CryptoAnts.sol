@@ -229,7 +229,7 @@ contract CryptoAnts is
 
   function _resetOvipositionPeriod(uint256 _antId) private {
       uint256 newOvipositionPeriod = block.timestamp + PREOVIPOSITION_PERIOD;
-      
+
       s_ovipositionPeriod[_antId] = newOvipositionPeriod;
 
       emit OvipositionPeriodReset(_antId, newOvipositionPeriod);
@@ -251,6 +251,14 @@ contract CryptoAnts is
     emit PricesUpdated(_newEggPrice, _newAntPrice);
   }
 
+  function withdrawEther(address _receiver, uint256 _amount) external onlyOwner {
+    if(_receiver == address(0)) revert ZeroAddress();
+    if(_amount == 0) revert ZeroAmount();
+
+    (bool success,) = _receiver.call{value: _amount}("");
+    if(!success) revert TransferFailed();
+  }
+
   /**
     @notice Withdraws LINK token
     @dev Only the governor can call this
@@ -259,6 +267,7 @@ contract CryptoAnts is
    */
   function withdrawLink(address _receiver, uint256 _amount) external onlyOwner {
     if(_receiver == address(0)) revert ZeroAddress();
+    if(_amount == 0) revert ZeroAmount();
 
     LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
     if(link.transfer(_receiver, _amount) == false) revert TransferFailed();
