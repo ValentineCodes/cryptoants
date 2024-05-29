@@ -24,14 +24,29 @@ contract Egg is
     i_ants = _ants;
   }
 
+  /**
+    *
+    * @notice Mints {_amount} tokens to {_to}
+    * @dev Only the CryptoAnts contract can call this
+    * @param _to Address to mint to
+    * @param _amount Amount to mint
+  */
   function mint(address _to, uint256 _amount) external override onlyAntsContract {
     _mint(_to, _amount);
   }
 
+  /**
+    *
+    * @notice Burns {_amount} tokens from {_to}
+    * @dev Only the CryptoAnts contract can call this
+    * @param _to Address to burn from
+    * @param _amount Amount to burn
+  */
   function burn(address _from, uint256 _amount) external override onlyAntsContract {
     _burn(_from, _amount);
   }
 
+  /// @notice Returns 0 so Eggs are indivisable
   function decimals() public view virtual override returns (uint8) {
     return 0;
   }
