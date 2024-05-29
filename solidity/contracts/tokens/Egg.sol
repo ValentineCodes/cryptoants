@@ -4,18 +4,17 @@ pragma solidity 0.8.20;
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IEgg} from '../interfaces/IEgg.sol';
-
-error Egg__OnlyAntsContractCanCallThis();
+import '../utils/Errors.sol';
 
 contract Egg is 
   ERC20, 
   IEgg, 
-  Initializable 
+  Initializable
 {
   address private i_ants;
 
   modifier onlyAntsContract() {
-    if (msg.sender != i_ants) revert Egg__OnlyAntsContractCanCallThis();
+    if (msg.sender != i_ants) revert OnlyAntsContractCanCallThis();
     _;
   }
 

@@ -7,12 +7,13 @@ import {VRFV2WrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/VRFV2W
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {IEgg} from '../interfaces/IEgg.sol';
 import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
+import '../utils/Errors.sol';
 
 contract CryptoAnts is 
     ICryptoAnts, 
     ERC721, 
     VRFV2WrapperConsumerBase,
-    ConfirmedOwner 
+    ConfirmedOwner
 {
   IEgg public immutable eggs;
   uint256 private s_eggPrice = 0.01 ether;
@@ -20,6 +21,8 @@ contract CryptoAnts is
   uint256 private s_antsCreated = 0;
   uint256[] private s_antsToReincarnate;
 
+  uint256 public constant MAX_EGGS_TO_LAY = 10;
+  uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes;
   uint256 public constant OVIPOSITION_DELAY = 3 days;
   mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod;
 
@@ -84,7 +87,7 @@ contract CryptoAnts is
 
     _mint(msg.sender, _antId);
 
-    s_ovipositionPeriod[_antId] = block.timestamp + 10 minutes;
+    s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
 
     emit AntCreated(msg.sender, _antId);
   }
@@ -106,7 +109,7 @@ contract CryptoAnts is
     uint256 ovipositionPeriod = s_ovipositionPeriod[_antId];
     if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
     if(block.timestamp > ovipositionPeriod + OVIPOSITION_DELAY){
-      s_ovipositionPeriod[_antId] = block.timestamp + 10 minutes;
+      s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
     } else {
       requestId = requestRandomness(
         CALLBACK_GAS_LIMIT,
@@ -143,7 +146,7 @@ contract CryptoAnts is
 
     emit OvipositionRequestFulfilled(_requestId, ovipositionRequest.paid);
     
-    uint256 eggsToLay = (_randomWords[0] % 10) + 1;
+    uint256 eggsToLay = (_randomWords[0] % MAX_EGGS_TO_LAY) + 1;
     uint256 dyingChance = (eggsToLay * 10) - 10;
 
     Ant memory ant = ovipositionRequest.ant;

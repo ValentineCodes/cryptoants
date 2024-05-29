@@ -20,7 +20,7 @@ import {VRFV2Wrapper} from "contracts/mocks/VRFV2Wrapper.sol";
 
 error InvalidPrivateKey(string);
 error TransferFailed();
-error Egg__OnlyAntsContractCanCallThis();
+error OnlyAntsContractCanCallThis();
 error ERC721NonexistentToken(uint256 tokenId);
 
 contract E2ECryptoAnts is Test, TestUtils {
@@ -107,7 +107,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
   function testOnlyAllowCryptoAntsToMintEggs() public {
     vm.startPrank(deployer);
-    vm.expectRevert(Egg__OnlyAntsContractCanCallThis.selector);
+    vm.expectRevert(OnlyAntsContractCanCallThis.selector);
 
     egg.mint(alice, 1);
 
