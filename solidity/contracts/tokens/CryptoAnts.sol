@@ -9,6 +9,13 @@ import {IEgg} from '../interfaces/IEgg.sol';
 import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 import '../utils/Errors.sol';
 
+/**
+  @author Valentine Orga
+  @title  CryptoAnts
+  @dev    This contract is the main entry point for all user interactions
+          Users will interact with this contract to buy eggs, create and sell ants, and lay eggs
+          Governance can update prices and withdraw link tokens
+ */
 contract CryptoAnts is 
     ICryptoAnts, 
     ERC721, 
@@ -19,15 +26,16 @@ contract CryptoAnts is
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
-  uint256[] private s_antsToReincarnate;
+  uint256[] private s_antsToReincarnate; // squashed ants to reincarnate
 
   uint256 public constant MAX_EGGS_TO_LAY = 10;
-  uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes;
-  uint256 public constant OVIPOSITION_DELAY = 3 days;
+  uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes; // how long from ant creation before ant can lay eggs
+  uint256 public constant OVIPOSITION_DELAY = 3 days; // how long oviposition can wait before reset
 
-  mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod;
-  mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests;
+  mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod; // oviposition period for each ant
+  mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests; // oviposition requests
 
+  // chainlink vrf config
   uint32 private constant CALLBACK_GAS_LIMIT = 300000;
   uint16 private constant REQUEST_CONFIRMATIONS = 3;
   uint32 private constant NUM_WORDS = 2;
