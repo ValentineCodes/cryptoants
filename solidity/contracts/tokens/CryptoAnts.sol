@@ -92,10 +92,12 @@ contract CryptoAnts is
     // mint the ant to the user
     _mint(msg.sender, _antId);
 
-    // ant can lay eggs in the next 10 minutes
-    s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
+    uint256 ovipositionPeriod = block.timestamp + PREOVIPOSITION_PERIOD;
 
-    emit AntCreated(msg.sender, _antId);
+    // ant can lay eggs in the next 10 minutes
+    s_ovipositionPeriod[_antId] = ovipositionPeriod;
+
+    emit AntCreated(msg.sender, _antId, ovipositionPeriod);
   }
 
   /**
@@ -130,8 +132,7 @@ contract CryptoAnts is
     if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
 
     if(block.timestamp > ovipositionPeriod + OVIPOSITION_DELAY){
-      // reset oviposition period if oviposition period has passed
-      s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
+      _resetOvipositionPeriod(_antId);
     } else {
       // request random numbers from chainlink
       requestId = requestRandomness(
@@ -205,8 +206,7 @@ contract CryptoAnts is
     }
 
     if(!isAntDead){
-      // reset oviposition period
-      s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
+      _resetOvipositionPeriod(_antId);
     }
 
     emit EggsLaid({
@@ -225,6 +225,14 @@ contract CryptoAnts is
     delete s_ovipositionPeriod[_antId];
 
     s_antsToReincarnate.push(_antId);
+  }
+
+  function _resetOvipositionPeriod(uint256 _antId) private {
+      uint256 newOvipositionPeriod = block.timestamp + PREOVIPOSITION_PERIOD;
+      
+      s_ovipositionPeriod[_antId] = newOvipositionPeriod;
+
+      emit OvipositionPeriodReset(_antId, newOvipositionPeriod);
   }
 
   /**

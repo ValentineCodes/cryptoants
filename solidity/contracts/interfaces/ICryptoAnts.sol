@@ -5,12 +5,13 @@ import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
 interface ICryptoAnts is IERC721 {
   event EggsBought(address owner, uint256 amount);
-  event AntCreated(address owner, uint256 antId);
+  event AntCreated(address owner, uint256 antId, uint256 ovipositionPeriod);
   event AntSold(address owner, uint256 antId);
   event PricesUpdated(uint256 newEggPrice, uint256 newAntPrice);
   event EggsLaid(address owner, uint256 antId, uint256 eggsLaid, bool isAntDead);
   event OvipositionRequested(uint256 requestId, uint256 paid);
   event OvipositionRequestFulfilled(uint256 requestId, uint256 paid);
+  event OvipositionPeriodReset(uint256 antId, uint256 ovipositionPeriod);
 
   struct Ant {
     address owner;
