@@ -201,9 +201,9 @@ contract E2ECryptoAnts is Test, TestUtils {
       bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
       vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
       ants.ownerOf(antId);
-      console.log("Ant died but layed ", eggsLaid);
+      console.log("Ant died but layed", eggsLaid, "eggs");
     } else {
-      console.log("Ant layed ", eggsLaid);
+      console.log("Ant layed ", eggsLaid, " eggs");
     }
 
     // ensure the eggs were laid
