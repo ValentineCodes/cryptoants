@@ -39,7 +39,7 @@ contract Egg is
     *
     * @notice Burns {_amount} tokens from {_to}
     * @dev Only the CryptoAnts contract can call this
-    * @param _to Address to burn from
+    * @param _from Address to burn from
     * @param _amount Amount to burn
   */
   function burn(address _from, uint256 _amount) external override onlyAntsContract {

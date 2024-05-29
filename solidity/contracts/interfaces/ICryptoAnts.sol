@@ -22,25 +22,69 @@ interface ICryptoAnts is IERC721 {
     Ant ant;
   }
 
-  function buyEggs(uint256) external payable;
+  /**
+    @notice Mints {_amount} eggs to msg.sender. 1 Egg == `s_eggPrice`
+    @param _amount Amount of eggs to mint
+   */
+  function buyEggs(uint256 _amount) external payable;
 
+  /**
+    @notice Creates an ant with an egg. 
+            Burns the egg and mints an ant to msg.sender
+   */
   function createAnt() external;
 
+  /**
+    @notice Sell an ant for `s_antPrice`. Ant is squashed but can be reincarnated.
+    @param _antId ID of ant to sell
+   */
   function sellAnt(uint256 _antId) external;
 
+  /**
+    @notice Starts oviposition if oviposition period has been reached. 
+            Ants can lay at least One egg during the oviposition period. 
+            The more eggs are laid, the higher the chances of dying
+    @dev Requests random numbers from Chainlink to determine number of eggs to lay and the dying chance
+    @param _antId ID of ant to lay eggs
+    @return requestId Request ID of random number request from Chainlink
+   */
   function startOviposition(uint256 _antId) external returns (uint256 requestId);
 
-  function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external;
+  /**
+    @notice Updates egg and ant price. 
+            Ant price must always be less than egg price
+    @dev Only the governor can call this
+    @param _newEggPrice New egg price
+    @param _newAntPrice New ant price
+   */
+  function updatePrices(uint256 _newEggPrice, uint256 _newAntPrice) external;
 
+  /**
+    @notice Withdraws LINK token
+    @dev Only the governor can call this
+    @param _receiver Address of token receiver
+    @param _amount Amount to withdraw
+   */
   function withdrawLink(address _receiver, uint256 _amount) external;
 
+  /// @notice Gets egg price
   function getEggPrice() external view returns (uint256);
 
+  /// @notice Gets ant price
   function getAntPrice() external view returns (uint256);
 
+  /// @notice Gets number of ants created
   function getAntsCreated() external view returns (uint256);
 
+  /**
+    @notice Gets oviposition period of ant
+    @param _antId ID of ant
+   */
   function getOvipositionPeriod(uint256 _antId) external view returns (uint256 ovipositionPeriod);
 
-  function getOvipositionRequest(uint256 requestId) external view returns (OvipositionRequest memory ovipositionRequest);
+  /**
+    @notice Gets oviposition request
+    @param _requestId Request ID from Chainlink VRf
+   */
+  function getOvipositionRequest(uint256 _requestId) external view returns (OvipositionRequest memory);
 }

@@ -47,6 +47,10 @@ contract CryptoAnts is
     i_linkAddress = _linkAddress;
   }
 
+  /**
+    @notice Mints {_amount} eggs to msg.sender. 1 Egg == `s_eggPrice`
+    @param _amount Amount of eggs to mint
+   */
   function buyEggs(uint256 _amount) external payable {
     if (_amount == 0) revert ZeroAmount();
     if ((_amount * s_eggPrice) != msg.value) revert WrongEtherSent();
@@ -56,11 +60,15 @@ contract CryptoAnts is
     emit EggsBought(msg.sender, _amount);
   }
 
+  /**
+    @notice Creates an ant with an egg. Burns the egg and mints an ant to msg.sender
+   */
   function createAnt() external {
     if (eggs.balanceOf(msg.sender) < 1) revert NoEggs();
 
     uint256 _antId;
 
+    // reincarnate ant if any, otherwise, create a new ant
     if (s_antsToReincarnate.length == 0) {
       _antId = ++s_antsCreated;
     } else {
@@ -70,34 +78,54 @@ contract CryptoAnts is
 
     if (_ownerOf(_antId) != address(0)) revert AlreadyExists();
 
+    // burn the egg
     eggs.burn(msg.sender, 1);
 
+    // mint the ant to the user
     _mint(msg.sender, _antId);
 
+    // ant can lay eggs in the next 10 minutes
     s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
 
     emit AntCreated(msg.sender, _antId);
   }
 
+  /**
+    @notice Sell an ant for `s_antPrice`. Ant is squashed but can be reincarnated.
+    @param _antId ID of ant to sell
+   */
   function sellAnt(uint256 _antId) external {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
+    // squash ant and queue it for reincarnation
     _squashAnt(_antId);
 
+    // transfer ant price to user
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
 
     emit AntSold(msg.sender, _antId);
   }
 
+  /**
+    @notice Starts oviposition if oviposition period has been reached. Ant dying chance increases as eggs layed increases
+    @dev Requests random numbers from Chainlink to determine number of eggs to lay and the dying chance
+    @param _antId ID of ant to lay eggs
+    @return requestId Request ID of random number request from Chainlink
+   */
   function startOviposition(uint256 _antId) external returns (uint256 requestId) {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
     uint256 ovipositionPeriod = s_ovipositionPeriod[_antId];
+
+    // prevent oviposition before it's due
     if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
+
     if(block.timestamp > ovipositionPeriod + OVIPOSITION_DELAY){
+      // reset oviposition period if oviposition period has passed
       s_ovipositionPeriod[_antId] = block.timestamp + PREOVIPOSITION_PERIOD;
     } else {
+      // request random numbers from chainlink
       requestId = requestRandomness(
         CALLBACK_GAS_LIMIT,
         REQUEST_CONFIRMATIONS,
@@ -106,8 +134,11 @@ contract CryptoAnts is
 
       LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
 
+      // cost of request
       uint256 paid = VRF_V2_WRAPPER.calculateRequestPrice(CALLBACK_GAS_LIMIT);
       uint256 balance = link.balanceOf(address(this));
+
+      // revert if CryptoAnts cannot pay the cost
       if (balance < paid) revert InsufficientFunds(balance, paid);
       
       s_ovipositionRequests[requestId] = OvipositionRequest({
@@ -133,7 +164,10 @@ contract CryptoAnts is
 
     emit OvipositionRequestFulfilled(_requestId, ovipositionRequest.paid);
     
+    // determine random number of eggs to lay. 10 Max
     uint256 eggsToLay = (_randomWords[0] % MAX_EGGS_TO_LAY) + 1;
+
+    // determine the chance of dying. 0 - 90%
     uint256 dyingChance = (eggsToLay * 10) - 10;
 
     Ant memory ant = ovipositionRequest.ant;
@@ -141,21 +175,24 @@ contract CryptoAnts is
     _layEggs(ant.owner, ant.id, eggsToLay, dyingChance, _randomWords[1]);
   }
 
+  /// @dev Lay eggs and maybe squash ant
   function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
     uint256 eggsLayed;
     bool isAntDead;
-    uint256 antStrength = _randomNumber % 100;
+    uint256 dyingChanceMeasure = _randomNumber % 100;
 
+    // lay eggs one by one. Ants can lay at least One egg
     for(uint8 i = 0; i < _eggsToLay; i++){
       eggs.mint(_owner, 1);
       eggsLayed++;
 
-      if(antStrength <= _dyingChance) {
+      if(dyingChanceMeasure <= _dyingChance) {
+        // squash ant and stop oviposition
         isAntDead = true;
         _squashAnt(_antId);
         break;
       } else {
-        antStrength--;
+        dyingChanceMeasure--;
       }
     }
 
@@ -177,19 +214,28 @@ contract CryptoAnts is
     s_antsToReincarnate.push(_antId);
   }
 
-  function updatePrices(uint256 newEggPrice, uint256 newAntPrice) external onlyOwner {
-    if (newEggPrice == 0 || newAntPrice == 0) revert ZeroAmount();
-    if (newAntPrice >= newEggPrice) revert AntPriceMustBeLessThanEggPrice();
+  /**
+    @notice Updates egg and ant price. Ant price must always be less than egg price
+    @dev Only the governor can call this
+    @param _newEggPrice New egg price
+    @param _newAntPrice New ant price
+   */
+  function updatePrices(uint256 _newEggPrice, uint256 _newAntPrice) external onlyOwner {
+    if (_newEggPrice == 0 || _newAntPrice == 0) revert ZeroAmount();
+    if (_newAntPrice >= _newEggPrice) revert AntPriceMustBeLessThanEggPrice();
 
-    s_eggPrice = newEggPrice;
-    s_antPrice = newAntPrice;
+    s_eggPrice = _newEggPrice;
+    s_antPrice = _newAntPrice;
 
-    emit PricesUpdated(newEggPrice, newAntPrice);
+    emit PricesUpdated(_newEggPrice, _newAntPrice);
   }
 
   /**
-  * Allow withdraw of Link tokens from the contract
-  */
+    @notice Withdraws LINK token
+    @dev Only the governor can call this
+    @param _receiver Address of token receiver
+    @param _amount Amount to withdraw
+   */
   function withdrawLink(address _receiver, uint256 _amount) external onlyOwner {
     if(_receiver == address(0)) revert ZeroAddress();
 
@@ -197,23 +243,34 @@ contract CryptoAnts is
     if(link.transfer(_receiver, _amount) == false) revert TransferFailed();
   }
 
+  /// @notice Gets egg price
   function getEggPrice() external view returns (uint256) {
     return s_eggPrice;
   }
 
+  /// @notice Gets ant price
   function getAntPrice() external view returns (uint256) {
     return s_antPrice;
   }
 
+  /// @notice Gets number of ants created
   function getAntsCreated() external view returns (uint256) {
     return s_antsCreated;
   }
 
+  /**
+    @notice Gets oviposition period of ant
+    @param _antId ID of ant
+   */
   function getOvipositionPeriod(uint256 _antId) external view returns (uint256 ovipositionPeriod) {
     return s_ovipositionPeriod[_antId];
   }
 
-  function getOvipositionRequest(uint256 requestId) external view returns (OvipositionRequest memory ovipositionRequest) {
-    return s_ovipositionRequests[requestId];
+  /**
+    @notice Gets oviposition request
+    @param _requestId Request ID from Chainlink VRf
+   */
+  function getOvipositionRequest(uint256 _requestId) external view returns (OvipositionRequest memory) {
+    return s_ovipositionRequests[_requestId];
   }
 }
