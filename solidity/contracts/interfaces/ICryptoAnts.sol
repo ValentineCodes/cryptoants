@@ -61,6 +61,14 @@ interface ICryptoAnts is IERC721 {
   function updatePrices(uint256 _newEggPrice, uint256 _newAntPrice) external;
 
   /**
+  @notice Withdraws ether
+  @dev Only the governor can call this
+  @param _receiver Address of ether receiver
+  @param _amount Amount to withdraw
+  */
+  function withdrawEther(address _receiver, uint256 _amount) external;
+
+  /**
     @notice Withdraws LINK token
     @dev Only the governor can call this
     @param _receiver Address of token receiver

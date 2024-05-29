@@ -251,6 +251,12 @@ contract CryptoAnts is
     emit PricesUpdated(_newEggPrice, _newAntPrice);
   }
 
+  /**
+    @notice Withdraws ether
+    @dev Only the governor can call this
+    @param _receiver Address of ether receiver
+    @param _amount Amount to withdraw
+   */
   function withdrawEther(address _receiver, uint256 _amount) external onlyOwner {
     if(_receiver == address(0)) revert ZeroAddress();
     if(_amount == 0) revert ZeroAmount();
