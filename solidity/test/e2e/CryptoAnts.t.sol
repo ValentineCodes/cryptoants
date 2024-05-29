@@ -174,7 +174,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     vm.recordLogs();
 
-    uint256 requestId = ants.initOviposition(_antId);
+    uint256 requestId = ants.startOviposition(_antId);
 
     vrfCoordinatorV2Mock.fulfillRandomWords(requestId, address(vrfV2Wrapper));
 

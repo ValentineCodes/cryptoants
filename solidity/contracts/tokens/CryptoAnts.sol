@@ -24,25 +24,12 @@ contract CryptoAnts is
   uint256 public constant MAX_EGGS_TO_LAY = 10;
   uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes;
   uint256 public constant OVIPOSITION_DELAY = 3 days;
+
   mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod;
-
-  struct Ant {
-    address owner;
-    uint256 id;
-  }
-
-  struct OvipositionRequest {
-    uint256 paid; // amount paid in link
-    bool fulfilled; // whether the request has been successfully fulfilled
-    Ant ant;
-  }
-
   mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests;
 
   uint32 private constant CALLBACK_GAS_LIMIT = 300000;
-
   uint16 private constant REQUEST_CONFIRMATIONS = 3;
-
   uint32 private constant NUM_WORDS = 2;
 
   address private immutable i_linkAddress;
@@ -103,7 +90,7 @@ contract CryptoAnts is
     emit AntSold(msg.sender, _antId);
   }
 
-  function initOviposition(uint256 _antId) external returns (uint256 requestId) {
+  function startOviposition(uint256 _antId) external returns (uint256 requestId) {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
     uint256 ovipositionPeriod = s_ovipositionPeriod[_antId];
@@ -203,7 +190,7 @@ contract CryptoAnts is
   /**
   * Allow withdraw of Link tokens from the contract
   */
-  function withdrawLink(address _receiver, uint256 _amount) public onlyOwner {
+  function withdrawLink(address _receiver, uint256 _amount) external onlyOwner {
     if(_receiver == address(0)) revert ZeroAddress();
 
     LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
