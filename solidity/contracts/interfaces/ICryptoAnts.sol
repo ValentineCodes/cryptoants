@@ -9,6 +9,8 @@ interface ICryptoAnts is IERC721 {
   event AntSold(address owner, uint256 antId);
   event PricesUpdated(uint256 newEggPrice, uint256 newAntPrice);
   event EggsLayed(address owner, uint256 antId, uint256 eggsLayed, bool isAntDead);
+  event OvipositionRequested(uint256 requestId, uint256 paid);
+  event OvipositionRequestFulfilled(uint256 requestId, uint256 paid);
 
   function buyEggs(uint256) external payable;
 
@@ -33,7 +35,9 @@ interface ICryptoAnts is IERC721 {
 
   error AntPriceMustBeLessThanEggPrice();
 
-  error RequestNotFound();
+  error RequestNotFound(uint256 requestId);
 
   error PreOvipositionPeriod();
+
+  error InsufficientFunds(uint256 balance, uint256 paid);
 }

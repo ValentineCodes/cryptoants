@@ -181,11 +181,11 @@ contract E2ECryptoAnts is Test, TestUtils {
     Vm.Log[] memory entries = vm.getRecordedLogs();
 
     (
-      address owner,
+      /* address owner */,
       uint256 antId,
       uint256 eggsLayed,
       bool isAntDead
-    ) = abi.decode(entries[5].data, (address, uint256, uint256, bool));
+    ) = abi.decode(entries[7].data, (address, uint256, uint256, bool));
 
     if(isAntDead){
       bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));

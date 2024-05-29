@@ -28,7 +28,13 @@ contract CryptoAnts is
     uint256 id;
   }
 
-  mapping(uint256 requestId => Ant ant) private s_ovipositionRequests;
+  struct OvipositionRequest {
+    uint256 paid; // amount paid in link
+    bool fulfilled; // whether the request has been successfully fulfilled
+    Ant ant;
+  }
+
+  mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests;
 
   uint32 private constant CALLBACK_GAS_LIMIT = 300000;
 
@@ -86,7 +92,7 @@ contract CryptoAnts is
   function sellAnt(uint256 _antId) external {
     if (_ownerOf(_antId) != msg.sender) revert NotAntOwner();
 
-    _killAnt(_antId);
+    _squashAnt(_antId);
 
     (bool success,) = msg.sender.call{value: s_antPrice}('');
     if (!success) revert TransferFailed();
@@ -108,10 +114,22 @@ contract CryptoAnts is
         NUM_WORDS
       );
 
-      s_ovipositionRequests[requestId] = Ant({
-        owner: msg.sender,
-        id: _antId
+      LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
+
+      uint256 paid = VRF_V2_WRAPPER.calculateRequestPrice(CALLBACK_GAS_LIMIT);
+      uint256 balance = link.balanceOf(address(this));
+      if (balance < paid) revert InsufficientFunds(balance, paid);
+      
+      s_ovipositionRequests[requestId] = OvipositionRequest({
+          paid: paid,
+          fulfilled: false,
+          ant: Ant({
+            owner: msg.sender,
+            id: _antId
+          })
       });
+
+      emit OvipositionRequested(requestId, paid);
     }
   }
 
@@ -119,11 +137,16 @@ contract CryptoAnts is
     uint256 _requestId,
     uint256[] memory _randomWords
   ) internal override {
-    Ant memory ant = s_ovipositionRequests[_requestId];
-    if(ant.owner == address(0)) revert RequestNotFound();
+    OvipositionRequest storage ovipositionRequest = s_ovipositionRequests[_requestId];
+    if(ovipositionRequest.paid == 0) revert RequestNotFound(_requestId);
+    ovipositionRequest.fulfilled = true;
+
+    emit OvipositionRequestFulfilled(_requestId, ovipositionRequest.paid);
     
     uint256 eggsToLay = (_randomWords[0] % 10) + 1;
     uint256 dyingChance = (eggsToLay * 10) - 10;
+
+    Ant memory ant = ovipositionRequest.ant;
 
     _layEggs(ant.owner, ant.id, eggsToLay, dyingChance, _randomWords[1]);
   }
@@ -139,7 +162,7 @@ contract CryptoAnts is
 
       if(antStrength <= _dyingChance) {
         isAntDead = true;
-        _killAnt(_antId);
+        _squashAnt(_antId);
         break;
       } else {
         antStrength--;
@@ -154,7 +177,7 @@ contract CryptoAnts is
     });
   } 
 
-  function _killAnt(uint256 _antId) private {
+  function _squashAnt(uint256 _antId) private {
     _burn(_antId);
 
     s_antsCreated--;
@@ -184,19 +207,23 @@ contract CryptoAnts is
     if(link.transfer(_receiver, _amount) == false) revert TransferFailed();
   }
 
-  function getEggPrice() public view returns (uint256) {
+  function getEggPrice() external view returns (uint256) {
     return s_eggPrice;
   }
 
-  function getAntPrice() public view returns (uint256) {
+  function getAntPrice() external view returns (uint256) {
     return s_antPrice;
   }
 
-  function getAntsCreated() public view returns (uint256) {
+  function getAntsCreated() external view returns (uint256) {
     return s_antsCreated;
   }
 
   function getOvipositionPeriod(uint256 _antId) external view returns (uint256 ovipositionPeriod) {
     return s_ovipositionPeriod[_antId];
+  }
+
+  function getOvipositionRequest(uint256 requestId) external view returns (OvipositionRequest memory ovipositionRequest) {
+    return s_ovipositionRequests[requestId];
   }
 }
