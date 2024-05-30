@@ -30,7 +30,7 @@ contract CryptoAnts is
 
   uint256 public constant MAX_EGGS_TO_LAY = 10;
   uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes; // how long from ant creation before ant can lay eggs
-  uint256 public constant OVIPOSITION_DELAY = 3 days; // how long oviposition can wait before reset
+  uint256 public constant OVIPOSITION_DURATION = 3 days; // how long oviposition can wait before reset
 
   mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod; // oviposition period for each ant
   mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests; // oviposition requests
@@ -131,9 +131,10 @@ contract CryptoAnts is
     // prevent oviposition before it's due
     if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
 
-    if(block.timestamp > ovipositionPeriod + OVIPOSITION_DELAY){
+    if(block.timestamp > ovipositionPeriod + OVIPOSITION_DURATION){
       _resetOvipositionPeriod(_antId);
     } else {
+      _resetOvipositionPeriod(_antId);
       // request random numbers from chainlink
       requestId = requestRandomness(
         CALLBACK_GAS_LIMIT,
@@ -203,10 +204,6 @@ contract CryptoAnts is
       } else {
         dyingChanceMeasure--;
       }
-    }
-
-    if(!isAntDead){
-      _resetOvipositionPeriod(_antId);
     }
 
     emit EggsLaid({
