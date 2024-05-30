@@ -254,29 +254,30 @@ contract CryptoAnts is
   /**
     @notice Withdraws ether
     @dev Only the governor can call this
-    @param _receiver Address of ether receiver
+    @param _recipient Address of ether receiver
     @param _amount Amount to withdraw
    */
-  function withdrawEther(address _receiver, uint256 _amount) external onlyOwner {
-    if(_receiver == address(0)) revert ZeroAddress();
+  function withdrawEther(address payable _recipient, uint256 _amount) external onlyOwner {
+    if(_recipient == address(0)) revert ZeroAddress();
     if(_amount == 0) revert ZeroAmount();
+    if(address(this).balance < _amount) revert InsufficientBalance();
 
-    (bool success,) = _receiver.call{value: _amount}("");
+    (bool success, ) = _recipient.call{value: _amount}("");
     if(!success) revert TransferFailed();
   }
 
   /**
     @notice Withdraws LINK token
     @dev Only the governor can call this
-    @param _receiver Address of token receiver
+    @param _recipient Address of token receiver
     @param _amount Amount to withdraw
    */
-  function withdrawLink(address _receiver, uint256 _amount) external onlyOwner {
-    if(_receiver == address(0)) revert ZeroAddress();
+  function withdrawLink(address _recipient, uint256 _amount) external onlyOwner {
+    if(_recipient == address(0)) revert ZeroAddress();
     if(_amount == 0) revert ZeroAmount();
 
     LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
-    if(link.transfer(_receiver, _amount) == false) revert TransferFailed();
+    if(link.transfer(_recipient, _amount) == false) revert TransferFailed();
   }
 
   /// @notice Gets egg price

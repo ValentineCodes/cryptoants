@@ -214,6 +214,55 @@ contract E2ECryptoAnts is Test, TestUtils {
   function testCanUpdatePrices() public {
     vm.startPrank(deployer);
 
+    executeGovernanceFunction(CryptoAnts.updatePrices.selector, abi.encode(NEW_EGG_PRICE, NEW_ANT_PRICE));
+
+    // ensure prices were updated
+    assertEq(ants.getEggPrice(), NEW_EGG_PRICE);
+    assertEq(ants.getAntPrice(), NEW_ANT_PRICE);
+
+    vm.stopPrank();
+  }
+  function testWithdrawEther() public {
+    vm.startPrank(deployer);
+
+    uint256 prevDeployerBalance = address(alice).balance;
+
+    ants.buyEggs{value: ants.getEggPrice()}(1);
+
+    executeGovernanceFunction(CryptoAnts.withdrawEther.selector, abi.encode(alice, ants.getEggPrice()));
+
+    assertEq(address(alice).balance, prevDeployerBalance + ants.getEggPrice());
+
+    vm.stopPrank();
+  }
+  function createAnt() internal {
+    vm.startPrank(deployer);
+
+      // Buy an egg
+      ants.buyEggs{value: ants.getEggPrice()}(1);
+
+      // ensure user has one egg
+      assertEq(egg.balanceOf(deployer), 1);
+      
+      // ensure ants was paid
+      assertEq(address(ants).balance, ants.getEggPrice());
+
+      // Create ant
+      ants.createAnt();
+
+      // ensure user has an ant
+      assertEq(ants.balanceOf(deployer), 1);
+
+      // ensure egg was burned
+      assertEq(egg.balanceOf(deployer), 0);
+
+      // ensure oviposition period was set
+      assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
+
+    vm.stopPrank();
+  }
+
+  function executeGovernanceFunction(bytes4 functionSelector, bytes memory args) internal {
     address[] memory targets = new address[](1);
     targets[0] = address(ants);
 
@@ -221,7 +270,7 @@ contract E2ECryptoAnts is Test, TestUtils {
     values[0] = 0;
 
     bytes[] memory calldatas = new bytes[](1);
-    calldatas[0] = abi.encodePacked(CryptoAnts.updatePrices.selector, abi.encode(NEW_EGG_PRICE, NEW_ANT_PRICE));
+    calldatas[0] = abi.encodePacked(functionSelector, args);
 
     string memory proposalDescription = "Update prices";
 
@@ -258,39 +307,5 @@ contract E2ECryptoAnts is Test, TestUtils {
       calldatas,
       keccak256(bytes(proposalDescription))
     );
-
-    // ensure prices were updated
-    assertEq(ants.getEggPrice(), NEW_EGG_PRICE);
-    assertEq(ants.getAntPrice(), NEW_ANT_PRICE);
-
-    vm.stopPrank();
-  }
-  // function testBeAbleToCreate100AntsWithOnlyOneInitialEgg() public {}
-
-  function createAnt() internal {
-    vm.startPrank(deployer);
-
-      // Buy an egg
-      ants.buyEggs{value: ants.getEggPrice()}(1);
-
-      // ensure user has one egg
-      assertEq(egg.balanceOf(deployer), 1);
-      
-      // ensure ants was paid
-      assertEq(address(ants).balance, ants.getEggPrice());
-
-      // Create ant
-      ants.createAnt();
-
-      // ensure user has an ant
-      assertEq(ants.balanceOf(deployer), 1);
-
-      // ensure egg was burned
-      assertEq(egg.balanceOf(deployer), 0);
-
-      // ensure oviposition period was set
-      assertEq(ants.getOvipositionPeriod(1), block.timestamp + 10 minutes);
-
-    vm.stopPrank();
   }
 }
