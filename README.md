@@ -5,16 +5,16 @@ An NFT which enables users to own ants. Users can buy eggs. Each egg can be used
 ## Deployments
 
 GovernanceToken 
- https://sepolia.etherscan.io/address/0xA12cdD27a03C606E6cA8F3027C422B208cddcD1c
+ https://sepolia.etherscan.io/address/0x8b187d7A2Bd75a2c1C82C318963D4a2D7a3402C8
 
 GovernanceTimeLock 
- https://sepolia.etherscan.io/address/0x27036Cf92815b2609B6C05c6bb1AAC407A77eFaf
+ https://sepolia.etherscan.io/address/0xa75D21DE904700AaBb5C753c3669A3b1530A04d1
 
-GovernorContract  https://sepolia.etherscan.io/address/0x036b66ECB365CB4fB3C47fA638fB0576C628259c
+GovernorContract  https://sepolia.etherscan.io/address/0xa8fF49d27e0562Ac1Be1A7232B2b996CFA9008C7
 
-Egg  https://sepolia.etherscan.io/address/0x304974EccfF53F74242781b8CA8904D1b0d87651
+Egg  https://sepolia.etherscan.io/address/0x37E8B707747BE93cAbf90dE48F53b31AAC8466Af
 
-CryptoAnts  https://sepolia.etherscan.io/address/0x7A1c5E879A01dA94b04D9956e65602EF0249942D
+CryptoAnts  https://sepolia.etherscan.io/address/0x8A911e67BFEd57C4D3f9e564b128259Da90C2697
 
 ## Environment Setup
 

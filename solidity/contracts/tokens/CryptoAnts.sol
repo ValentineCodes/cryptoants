@@ -135,12 +135,6 @@ contract CryptoAnts is
       _resetOvipositionPeriod(_antId);
     } else {
       _resetOvipositionPeriod(_antId);
-      // request random numbers from chainlink
-      requestId = requestRandomness(
-        CALLBACK_GAS_LIMIT,
-        REQUEST_CONFIRMATIONS,
-        NUM_WORDS
-      );
 
       LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
 
@@ -150,6 +144,13 @@ contract CryptoAnts is
 
       // revert if CryptoAnts cannot pay the cost
       if (balance < paid) revert InsufficientFunds(balance, paid);
+      
+      // request random numbers from chainlink
+      requestId = requestRandomness(
+        CALLBACK_GAS_LIMIT,
+        REQUEST_CONFIRMATIONS,
+        NUM_WORDS
+      );
       
       s_ovipositionRequests[requestId] = OvipositionRequest({
           paid: paid,
