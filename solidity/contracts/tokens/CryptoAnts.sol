@@ -108,11 +108,13 @@ contract CryptoAnts is
     // squash ant and queue it for reincarnation
     _squashAnt(_antId);
 
+    uint256 antPrice = s_antPrice;
+
     // transfer ant price to user
-    (bool success,) = msg.sender.call{value: s_antPrice}('');
+    (bool success,) = msg.sender.call{value: antPrice}('');
     if (!success) revert TransferFailed();
 
-    emit AntSold(msg.sender, _antId);
+    emit AntSold(msg.sender, _antId, antPrice);
   }
 
   /**
