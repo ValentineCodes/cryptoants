@@ -70,11 +70,10 @@ contract CryptoAnts is
 
   /**
     @notice Creates an ant with an egg. Burns the egg and mints an ant to msg.sender
+    @return _antId ID of an created
    */
-  function createAnt() external {
+  function createAnt() external returns (uint256 _antId) {
     if (eggs.balanceOf(msg.sender) < 1) revert NoEggs();
-
-    uint256 _antId;
 
     // reincarnate ant if any, otherwise, create a new ant
     if (s_antsToReincarnate.length == 0) {

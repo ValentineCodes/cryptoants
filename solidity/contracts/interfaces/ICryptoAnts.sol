@@ -32,8 +32,9 @@ interface ICryptoAnts is IERC721 {
   /**
     @notice Creates an ant with an egg. 
             Burns the egg and mints an ant to msg.sender
+    @return _antId ID of an created
    */
-  function createAnt() external;
+  function createAnt() external returns (uint256 _antId);
 
   /**
     @notice Sell an ant for `s_antPrice`. Ant is squashed but can be reincarnated.
