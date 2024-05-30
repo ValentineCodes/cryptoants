@@ -64,6 +64,20 @@ contract Deploy is Script {
 
     console.logString(
         string.concat(
+            "CryptoAnts deployed at: ",
+            vm.toString(address(ants))
+        )
+    );
+    
+    console.logString(
+        string.concat(
+            "Egg deployed at: ",
+            vm.toString(address(egg))
+        )
+    );
+
+    console.logString(
+        string.concat(
             "GovernanceToken deployed at: ",
             vm.toString(address(governanceToken))
         )
@@ -80,20 +94,6 @@ contract Deploy is Script {
         string.concat(
             "GovernorContract deployed at: ",
             vm.toString(address(governorContract))
-        )
-    );
-
-    console.logString(
-        string.concat(
-            "Egg deployed at: ",
-            vm.toString(address(egg))
-        )
-    );
-
-    console.logString(
-        string.concat(
-            "CryptoAnts deployed at: ",
-            vm.toString(address(ants))
         )
     );
 
