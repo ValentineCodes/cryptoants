@@ -22,7 +22,9 @@ contract CryptoAnts is
     VRFV2WrapperConsumerBase,
     ConfirmedOwner
 {
-  IEgg public immutable eggs;
+  IEgg private immutable eggs;
+  LinkTokenInterface private immutable linkToken;
+
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
@@ -49,8 +51,6 @@ contract CryptoAnts is
   uint32 private constant CALLBACK_GAS_LIMIT = 300000;
   uint16 private constant REQUEST_CONFIRMATIONS = 3;
   uint32 private constant NUM_WORDS = 2;
-
-  address private immutable i_linkAddress;
   constructor(
     address _eggs, 
     address _governance,
@@ -62,7 +62,7 @@ contract CryptoAnts is
     VRFV2WrapperConsumerBase(_linkAddress, _wrapperAddress)
   {
     eggs = IEgg(_eggs);
-    i_linkAddress = _linkAddress;
+    linkToken = LinkTokenInterface(_linkAddress);
   }
 
   /**
@@ -144,11 +144,9 @@ contract CryptoAnts is
     _resetOvipositionPeriod(_antId);
 
     if(block.timestamp >= ovipositionPeriod && block.timestamp < ovipositionPeriod + OVIPOSITION_DEADLINE){
-      LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
-
       // cost of request
       uint256 paid = VRF_V2_WRAPPER.calculateRequestPrice(CALLBACK_GAS_LIMIT);
-      uint256 balance = link.balanceOf(address(this));
+      uint256 balance = linkToken.balanceOf(address(this));
 
       // revert if CryptoAnts cannot pay the cost
       if (balance < paid) revert InsufficientFunds(balance, paid);
@@ -286,8 +284,7 @@ contract CryptoAnts is
     if(_recipient == address(0)) revert ZeroAddress();
     if(_amount == 0) revert ZeroAmount();
 
-    LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
-    if(link.transfer(_recipient, _amount) == false) revert TransferFailed();
+    if(linkToken.transfer(_recipient, _amount) == false) revert TransferFailed();
   }
 
   /// @notice Gets egg price
