@@ -79,11 +79,10 @@ contract CryptoAnts is
     if (s_antsToReincarnate.length == 0) {
       _antId = ++s_antsCreated;
     } else {
-      _antId = s_antsToReincarnate[0];
+      _antId = s_antsToReincarnate[s_antsToReincarnate.length - 1];
+      s_antsToReincarnate.pop();
       s_antsCreated++;
     }
-
-    if (_ownerOf(_antId) != address(0)) revert AlreadyExists();
 
     // burn the egg
     eggs.burn(msg.sender, 1);
@@ -214,7 +213,7 @@ contract CryptoAnts is
       eggsLaid: eggsLaid,
       isAntDead: isAntDead
     });
-  } 
+  }
 
   function _squashAnt(uint256 _antId) private {
     _burn(_antId);
