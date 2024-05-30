@@ -8,7 +8,7 @@ interface ICryptoAnts is IERC721 {
   event AntCreated(address owner, uint256 antId, uint256 ovipositionPeriod);
   event AntSold(address owner, uint256 antId, uint256 price);
   event PricesUpdated(uint256 newEggPrice, uint256 newAntPrice);
-  event EggsLaid(address owner, uint256 antId, uint256 eggsLaid, bool isAntDead);
+  event EggsLaid(address owner, uint256 antId, uint256 eggsFertilized, uint256 eggsLaid, bool isAntDead);
   event OvipositionRequested(uint256 requestId, uint256 paid);
   event OvipositionRequestFulfilled(uint256 requestId, uint256 paid);
   event OvipositionPeriodReset(uint256 antId, uint256 ovipositionPeriod);

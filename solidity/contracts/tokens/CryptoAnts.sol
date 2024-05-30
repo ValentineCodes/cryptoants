@@ -175,24 +175,24 @@ contract CryptoAnts is
     emit OvipositionRequestFulfilled(_requestId, ovipositionRequest.paid);
     
     // determine random number of eggs to lay. 10 Max
-    uint256 eggsToLay = (_randomWords[0] % MAX_EGGS_TO_LAY) + 1;
+    uint256 eggsFertilized = (_randomWords[0] % MAX_EGGS_TO_LAY) + 1;
 
     // determine the chance of dying. 0 - 90%
-    uint256 dyingChance = (eggsToLay * 10) - 10;
+    uint256 dyingChance = (eggsFertilized * 10) - 10;
 
     Ant memory ant = ovipositionRequest.ant;
 
-    _layEggs(ant.owner, ant.id, eggsToLay, dyingChance, _randomWords[1]);
+    _layEggs(ant.owner, ant.id, eggsFertilized, dyingChance, _randomWords[1]);
   }
 
   /// @dev Lay eggs and maybe squash ant
-  function _layEggs(address _owner, uint256 _antId, uint256 _eggsToLay, uint256 _dyingChance, uint256 _randomNumber) private {
+  function _layEggs(address _owner, uint256 _antId, uint256 _eggsFertilized, uint256 _dyingChance, uint256 _randomNumber) private {
     uint256 eggsLaid;
     bool isAntDead;
     uint256 dyingChanceMeasure = _randomNumber % 100;
 
     // lay eggs one by one. Ants can lay at least One egg
-    for(uint8 i = 0; i < _eggsToLay; i++){
+    for(uint8 i = 0; i < _eggsFertilized; i++){
       eggs.mint(_owner, 1);
       eggsLaid++;
 
@@ -209,6 +209,7 @@ contract CryptoAnts is
     emit EggsLaid({
       owner: _owner,
       antId: _antId,
+      eggsFertilized: _eggsFertilized,
       eggsLaid: eggsLaid,
       isAntDead: isAntDead
     });

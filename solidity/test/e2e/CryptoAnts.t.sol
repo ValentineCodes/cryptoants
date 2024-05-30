@@ -192,10 +192,12 @@ contract E2ECryptoAnts is Test, TestUtils {
     (
       /* address owner */,
       uint256 antId,
+      uint256 eggsFertilized,
       uint256 eggsLaid,
       bool isAntDead
-    ) = abi.decode(entries[8].data, (address, uint256, uint256, bool));
+    ) = abi.decode(entries[8].data, (address, uint256, uint256, uint256, bool));
 
+    console.log("Ant has", eggsFertilized, "fertilized eggs");
     if(isAntDead){
       bytes4 errorSelector = bytes4(keccak256("ERC721NonexistentToken(uint256)"));
       vm.expectRevert(abi.encodeWithSelector(errorSelector, antId));
