@@ -10,7 +10,7 @@ import {ICryptoAnts} from '../interfaces/ICryptoAnts.sol';
 import '../utils/Errors.sol';
 
 /**
-  @author Valentine Orga
+  @author ValentineOrga.eth
   @title  CryptoAnts
   @dev    This contract is the main entry point for all user interactions
           Users will interact with this contract to buy eggs, create and sell ants, and lay eggs
@@ -26,14 +26,24 @@ contract CryptoAnts is
   uint256 private s_eggPrice = 0.01 ether;
   uint256 private s_antPrice = 0.004 ether;
   uint256 private s_antsCreated = 0;
-  uint256[] private s_antsToReincarnate; // squashed ants to reincarnate
 
-  uint256 public constant MAX_EGGS_TO_LAY = 10;
-  uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes; // how long from ant creation before ant can lay eggs
-  uint256 public constant OVIPOSITION_DURATION = 3 days; // how long oviposition can wait before reset
+  // squashed ants to reincarnate
+  uint256[] private s_antsToReincarnate;
 
-  mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod; // oviposition period for each ant
-  mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests; // oviposition requests
+  // maximum number of eggs an ant can lay during oviposition
+  uint256 public constant MAX_EGGS_FERTILIZED = 10;
+
+  // how long from ant creation before ant can lay eggs
+  uint256 public constant PREOVIPOSITION_PERIOD = 10 minutes;
+
+  // how long oviposition can wait before reset
+  uint256 public constant OVIPOSITION_DEADLINE = 3 days;
+
+  // oviposition period for each ant
+  mapping(uint256 antId => uint256 ovipositionPeriod) private s_ovipositionPeriod;
+
+  // oviposition requests
+  mapping(uint256 requestId => OvipositionRequest ovipositionRequest) private s_ovipositionRequests;
 
   // chainlink vrf config
   uint32 private constant CALLBACK_GAS_LIMIT = 300000;
@@ -131,11 +141,9 @@ contract CryptoAnts is
     // prevent oviposition before it's due
     if (block.timestamp < ovipositionPeriod) revert PreOvipositionPeriod();
 
-    if(block.timestamp > ovipositionPeriod + OVIPOSITION_DURATION){
-      _resetOvipositionPeriod(_antId);
-    } else {
-      _resetOvipositionPeriod(_antId);
+    _resetOvipositionPeriod(_antId);
 
+    if(block.timestamp >= ovipositionPeriod && block.timestamp < ovipositionPeriod + OVIPOSITION_DEADLINE){
       LinkTokenInterface link = LinkTokenInterface(i_linkAddress);
 
       // cost of request
@@ -181,7 +189,7 @@ contract CryptoAnts is
     emit OvipositionRequestFulfilled(_requestId, ovipositionRequest.paid);
     
     // determine random number of eggs to lay. 10 Max
-    uint256 eggsFertilized = (_randomWords[0] % MAX_EGGS_TO_LAY) + 1;
+    uint256 eggsFertilized = (_randomWords[0] % MAX_EGGS_FERTILIZED) + 1;
 
     // determine the chance of dying. 0 - 90%
     uint256 dyingChance = (eggsFertilized * 10) - 10;

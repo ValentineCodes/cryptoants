@@ -6,6 +6,12 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 import {IEgg} from '../interfaces/IEgg.sol';
 import '../utils/Errors.sol';
 
+/**
+  @author ValentineOrga.eth
+  @title  Egg
+  @dev    This is an ERC20 token contract for managing eggs
+          Minting and Burning of eggs can only be done by the CryptoAnts contract
+ */
 contract Egg is 
   ERC20, 
   IEgg, 
@@ -20,27 +26,30 @@ contract Egg is
 
   constructor() ERC20('EGG', 'EGG') {}
 
+  /**
+    @notice Initializes contract
+    @dev This can only be called once
+    @param _ants Address of CryptoAnts contract
+   */
   function initialize(address _ants) external initializer {
     i_ants = _ants;
   }
 
   /**
-    *
-    * @notice Mints {_amount} tokens to {_to}
-    * @dev Only the CryptoAnts contract can call this
-    * @param _to Address to mint to
-    * @param _amount Amount to mint
+    @notice Mints {_amount} tokens to {_to}
+    @dev Only the CryptoAnts contract can call this
+    @param _to Address to mint to
+    @param _amount Amount to mint
   */
   function mint(address _to, uint256 _amount) external override onlyAntsContract {
     _mint(_to, _amount);
   }
 
   /**
-    *
-    * @notice Burns {_amount} tokens from {_to}
-    * @dev Only the CryptoAnts contract can call this
-    * @param _from Address to burn from
-    * @param _amount Amount to burn
+    @notice Burns {_amount} tokens from {_to}
+    @dev Only the CryptoAnts contract can call this
+    @param _from Address to burn from
+    @param _amount Amount to burn
   */
   function burn(address _from, uint256 _amount) external override onlyAntsContract {
     _burn(_from, _amount);
