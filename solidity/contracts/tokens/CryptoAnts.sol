@@ -149,7 +149,7 @@ contract CryptoAnts is
       uint256 balance = linkToken.balanceOf(address(this));
 
       // revert if CryptoAnts cannot pay the cost
-      if (balance < paid) revert InsufficientFunds(balance, paid);
+      if (balance < paid) revert InsufficientLINKTokens(balance, paid);
       
       // request random numbers from chainlink
       requestId = requestRandomness(
@@ -268,7 +268,7 @@ contract CryptoAnts is
   function withdrawEther(address payable _recipient, uint256 _amount) external onlyOwner {
     if(_recipient == address(0)) revert ZeroAddress();
     if(_amount == 0) revert ZeroAmount();
-    if(address(this).balance < _amount) revert InsufficientBalance();
+    if(address(this).balance < _amount) revert InsufficientETH();
 
     (bool success, ) = _recipient.call{value: _amount}("");
     if(!success) revert TransferFailed();

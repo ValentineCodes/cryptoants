@@ -36,7 +36,7 @@ error RequestNotFound(uint256 requestId);
 error PreOvipositionPeriod();
 
 /// @dev Error when trying to get a random number without enough LINK tokens
-error InsufficientFunds(uint256 balance, uint256 paid);
+error InsufficientLINKTokens(uint256 balance, uint256 paid);
 
 /// @dev Error when trying to transfer eth without enough balance
-error InsufficientBalance();
+error InsufficientETH();
