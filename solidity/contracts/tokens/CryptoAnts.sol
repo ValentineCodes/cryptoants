@@ -170,6 +170,11 @@ contract CryptoAnts is
     uint256[] memory _randomWords
   ) internal override {
     OvipositionRequest storage ovipositionRequest = s_ovipositionRequests[_requestId];
+    Ant memory ant = ovipositionRequest.ant;
+
+    // ensure ant wasn't squashed or transferred
+    if (_ownerOf(ant.id) != ant.owner) revert NotAntOwner();
+
     if(ovipositionRequest.paid == 0) revert RequestNotFound(_requestId);
     ovipositionRequest.fulfilled = true;
 
@@ -181,26 +186,24 @@ contract CryptoAnts is
     // determine the chance of dying. 0 - 90%
     uint256 dyingChance = (eggsFertilized * 10) - 10;
 
-    Ant memory ant = ovipositionRequest.ant;
-
-    _layEggs(ant.owner, ant.id, eggsFertilized, dyingChance, _randomWords[1]);
+    _layEggs(ant, eggsFertilized, dyingChance, _randomWords[1]);
   }
 
   /// @dev Lay eggs and maybe squash ant
-  function _layEggs(address _owner, uint256 _antId, uint256 _eggsFertilized, uint256 _dyingChance, uint256 _randomNumber) private {
+  function _layEggs(Ant memory ant, uint256 _eggsFertilized, uint256 _dyingChance, uint256 _randomNumber) private {
     uint256 eggsLaid;
     bool isAntDead;
     uint256 dyingChanceMeasure = _randomNumber % 100;
 
     // lay eggs one by one. Ants can lay at least One egg
     for(uint8 i = 0; i < _eggsFertilized; i++){
-      eggs.mint(_owner, 1);
+      eggs.mint(ant.owner, 1);
       eggsLaid++;
 
       if(dyingChanceMeasure <= _dyingChance) {
         // squash ant and stop oviposition
         isAntDead = true;
-        _squashAnt(_antId);
+        _squashAnt(ant.id);
         break;
       } else {
         dyingChanceMeasure--;
@@ -208,8 +211,8 @@ contract CryptoAnts is
     }
 
     emit EggsLaid({
-      owner: _owner,
-      antId: _antId,
+      owner: ant.owner,
+      antId: ant.id,
       eggsFertilized: _eggsFertilized,
       eggsLaid: eggsLaid,
       isAntDead: isAntDead
