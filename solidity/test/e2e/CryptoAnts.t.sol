@@ -10,7 +10,6 @@ import {GovernanceTimeLock} from "contracts/governance/GovernanceTimeLock.sol";
 import {GovernorContract} from "contracts/governance/GovernorContract.sol";
 import {CryptoAnts} from "contracts/tokens/CryptoAnts.sol";
 import {Egg} from "contracts/tokens/Egg.sol";
-import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 
 // mocks
 import {VRFCoordinatorV2Mock} from "contracts/mocks/VRFCoordinatorV2Mock.sol";
@@ -48,7 +47,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
   Egg internal egg;
   CryptoAnts internal ants;
-  LinkTokenInterface internal link;
+  LinkToken internal linkToken;
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('sepolia'), FORK_BLOCK);
@@ -87,7 +86,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(18, 3000000000000000);
 
-    LinkToken linkToken = new LinkToken();
+    linkToken = new LinkToken();
 
     vrfV2Wrapper = new VRFV2Wrapper(address(linkToken), address(mockV3Aggregator), address(vrfCoordinatorV2Mock));
 
@@ -105,7 +104,7 @@ contract E2ECryptoAnts is Test, TestUtils {
 
     ants = new CryptoAnts(address(egg), address(governanceTimeLock), address(linkToken), address(vrfV2Wrapper));
 
-    // func CryptoAnts with LINK tokens for Chainlink VRF
+    // fund CryptoAnts with LINK tokens for Chainlink VRF
     if(linkToken.transfer(address(ants), AMOUNT_TO_FUND_ANTS) == false) revert TransferFailed();
 
     egg.initialize(address(ants));
@@ -225,13 +224,26 @@ contract E2ECryptoAnts is Test, TestUtils {
   function testWithdrawEther() public {
     vm.startPrank(deployer);
 
-    uint256 prevDeployerBalance = address(alice).balance;
+    uint256 prevAliceBalance = address(alice).balance;
 
     ants.buyEggs{value: ants.getEggPrice()}(1);
 
     executeGovernanceFunction(CryptoAnts.withdrawEther.selector, abi.encode(alice, ants.getEggPrice()));
 
-    assertEq(address(alice).balance, prevDeployerBalance + ants.getEggPrice());
+    assertEq(address(alice).balance, prevAliceBalance + ants.getEggPrice());
+
+    vm.stopPrank();
+  }
+  function testWithdrawLink() public {
+    vm.startPrank(deployer);
+
+    uint256 prevAliceBalance = linkToken.balanceOf(alice);
+
+    uint256 prevAntsLinkBalance = linkToken.balanceOf(address(ants));
+
+    executeGovernanceFunction(CryptoAnts.withdrawLink.selector, abi.encode(alice, prevAntsLinkBalance));
+
+    assertEq(linkToken.balanceOf(alice), prevAliceBalance + prevAntsLinkBalance);
 
     vm.stopPrank();
   }
