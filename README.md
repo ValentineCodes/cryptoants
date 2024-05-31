@@ -14,17 +14,17 @@ An NFT protocol for Ant Keeping!
 
 ## Deployments
 
-CryptoAnts 🐜 https://sepolia.etherscan.io/address/0x9b4C2D4ECeb32DB91EB8fc3472B0cF31170A8A43
+CryptoAnts 🐜 https://sepolia.etherscan.io/address/0x18921bbfaEfDC098a2F6F7C53649b4F374F91d7f
 
-Egg 🥚 https://sepolia.etherscan.io/address/0x67F13d9E2d63e32E9be7CDEc56da1b10f4D21d9A
+Egg 🥚 https://sepolia.etherscan.io/address/0xb088bd338C3DFf0e05F6ee4DC507FC5E0DA57cDE
+
+GovernorContract 🧑‍⚖️ https://sepolia.etherscan.io/address/0xf0ACFf2a1A686ED5bC8DA5Ef3b9734DF0f4eA777
 
 GovernanceToken 🪙
- https://sepolia.etherscan.io/address/0x0C538F1e4A3e23ae7E74e2D9699F767C71c51c98
+ https://sepolia.etherscan.io/address/0x1815829d5217817eE566b33979697ea73FC25870
 
 GovernanceTimeLock ⏳
- https://sepolia.etherscan.io/address/0x15f9F141eD24C5b60eF1EBEa864EAE2b6Ab7Ff54
-
-GovernorContract 🧑‍⚖️ https://sepolia.etherscan.io/address/0xEC386F7Fddee6e77E6B71817b41ffb1730B7f0EE
+ https://sepolia.etherscan.io/address/0xba6a97e504C267A15ef0cd7FdF39a3e02F5C92E8
 
 ## Environment Setup
 
