@@ -1,6 +1,16 @@
 # CryptoAnts 🐜
 
-An NFT which enables users to own ants. Users can buy eggs. Each egg can be used to create an ant and each ant can lay an egg every 10 minutes. The ant may die while laying the eggs; The ant may not lay all it's eggs during oviposition. Users can also sell their ants for less price than the egg price.
+An NFT protocol for Ant Keeping!
+
+## Features
+- Users can buy eggs
+- Users can create ants with eggs
+- Users can sell their ants back to CryptoAnts
+- Ants can lay eggs every 10 minutes
+- Ants may die while laying eggs and may not lay all its eggs
+- Governance can update egg and ant prices
+- Governance can withdraw LINK token(this could disable oviposition)
+- Governance can withdraw Ether(this could disable ant sales)
 
 ## Deployments
 
@@ -29,6 +39,7 @@ Then download the challenge to your computer and install dependencies by running
 ```sh
 git clone https://github.com/wonder-eyes/ants-ValentineCodes.git cryptoants
 cd cryptoants
+git checkout challenge
 yarn install
 ```
 
