@@ -277,6 +277,39 @@ contract CryptoAnts is
     }
 
     /**
+    @notice Withdraws all ethers
+    @dev Only the governor can call this
+    @param _recipient Address of ether receiver
+   */
+    function withdrawEtherBalance(
+        address payable _recipient
+    ) external onlyOwner {
+        if (_recipient == address(0)) revert ZeroAddress();
+
+        uint256 amount = address(this).balance;
+
+        if (amount == 0) revert ZeroAmount();
+
+        (bool success, ) = _recipient.call{value: amount}("");
+        if (!success) revert TransferFailed();
+    }
+
+    /**
+    @notice Withdraws all LINK tokens
+    @dev Only the governor can call this
+    @param _recipient Address of token receiver
+   */
+    function withdrawLinkBalance(address _recipient) external onlyOwner {
+        if (_recipient == address(0)) revert ZeroAddress();
+
+        uint256 amount = linkToken.balanceOf(address(this));
+
+        if (amount == 0) revert ZeroAmount();
+
+        if (!linkToken.transfer(_recipient, amount)) revert TransferFailed();
+    }
+
+    /**
     @notice Withdraws ether
     @dev Only the governor can call this
     @param _recipient Address of ether receiver
