@@ -7,7 +7,6 @@ import {VRFV2WrapperConsumerBase} from "@chainlink/contracts/src/v0.8/vrf/VRFV2W
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import {IEgg} from "../interfaces/IEgg.sol";
 import {ICryptoAnts} from "../interfaces/ICryptoAnts.sol";
-import "../utils/Errors.sol";
 
 /**
   @author ValentineOrga.eth
