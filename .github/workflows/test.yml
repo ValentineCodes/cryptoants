@@ -57,7 +57,8 @@ jobs:
         run: |
           touch .env
           echo MAINNET_RPC="${{ secrets.MAINNET_RPC }}" >> .env
-          echo RINKEBY_RPC="${{ secrets.RINKEBY_RPC }}" >> .env
+          echo SEPOLIA_RPC="${{ secrets.SEPOLIA_RPC }}" >> .env
+          echo DEPLOYER_PRIVATE_KEY="${{ secrets.DEPLOYER_PRIVATE_KEY }}" >> .env
           cat .env
 
       - name: Run tests
